@@ -1,0 +1,2 @@
+rootProject.name='EmpTrack'
+include ':app'
