@@ -3,6 +3,8 @@ package com.tanmaymadaan.emptrack;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.Manifest;
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -116,9 +118,25 @@ public class MainActivity extends AppCompatActivity {
         public void onServiceDisconnected(ComponentName name) {
             if (name.getClassName().equals("LocationServiceGps")) {
                 locService = null;
+                Notification notification = getNotification("Tracking stopped :)");
+                NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                mNotificationManager.notify(12345678, notification);
             }
         }
     };
+
+    private Notification getNotification(String text) {
+
+//        NotificationChannel channel = new NotificationChannel("channel_01", "My Channel", NotificationManager.IMPORTANCE_DEFAULT);
+//
+//        NotificationManager notificationManager = getSystemService(NotificationManager.class);
+//        notificationManager.createNotificationChannel(channel);
+
+        Notification.Builder builder = new Notification.Builder(getApplicationContext(), "channel_01").setAutoCancel(true);
+        builder.setContentText(text);
+        builder.setSmallIcon(R.drawable.ic_launcher_background);
+        return builder.build();
+    }
 
 
 }

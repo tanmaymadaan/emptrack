@@ -1,7 +1,6 @@
 package com.tanmaymadaan.emptrack;
 
 import android.app.Notification;
-import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
@@ -9,14 +8,20 @@ import android.content.Intent;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Binder;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
-import androidx.core.app.NotificationCompat;
-import android.util.Log;
 
-import java.util.ArrayList;
-import java.util.Date;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+
+import android.util.Log;
+import android.widget.Toast;
+
+import com.tanmaymadaan.emptrack.interfaces.JsonHolderApi;
+import com.tanmaymadaan.emptrack.models.LocationPOJO;
 
 public class LocationServiceGps extends Service {
     private final LocationServiceBinder binder = new LocationServiceBinder();
@@ -25,7 +30,7 @@ public class LocationServiceGps extends Service {
     private LocationManager mLocationManager;
     private NotificationManager notificationManager;
 
-    private final int LOCATION_INTERVAL = 500;
+    private final int LOCATION_INTERVAL = 60000;
     private final int LOCATION_DISTANCE = 10;
 
     @Override
@@ -49,6 +54,36 @@ public class LocationServiceGps extends Service {
         {
             mLastLocation = location;
             Log.i(TAG, "LocationChanged: "+location);
+            Notification notification = getNotification("Tracking in progress :)");
+            NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            mNotificationManager.notify(12345678, notification);
+
+            String myUrl = "http://192.168.1.4:4000/";
+            Retrofit retrofit = new Retrofit.Builder()
+                    .baseUrl(myUrl)
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build();
+
+            JsonHolderApi jsonPlaceHolderApi = retrofit.create(JsonHolderApi.class);
+
+//            LocationPOJO locationPOJO = new LocationPOJO();
+            Call<LocationPOJO> call = jsonPlaceHolderApi.postLocation("Tanmay", "2020-03-13", location.getLatitude(), location.getLongitude(), 234562);
+            call.enqueue(new Callback<LocationPOJO>() {
+                @Override
+                public void onResponse(Call<LocationPOJO> call, Response<LocationPOJO> response) {
+                    if(!response.isSuccessful()){
+                        Toast.makeText(getApplicationContext(), response.code(), Toast.LENGTH_LONG).show();
+                    }
+                    Log.i("Success", "Saved Successfully");
+                    //Toast.makeText(getApplicationContext(), "Saved Successfully!", Toast.LENGTH_LONG).show();
+                }
+
+                @Override
+                public void onFailure(Call<LocationPOJO> call, Throwable t) {
+                    Log.e("Error Location", t.getMessage());
+                    Toast.makeText(getApplicationContext(), t.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            });
         }
 
         @Override
@@ -81,7 +116,7 @@ public class LocationServiceGps extends Service {
     public void onCreate()
     {
         Log.i(TAG, "onCreate");
-        startForeground(12345678, getNotification());
+        startForeground(12345678, getNotification("Yoooo"));
     }
 
     @Override
@@ -122,14 +157,16 @@ public class LocationServiceGps extends Service {
         this.onDestroy();
     }
 
-    private Notification getNotification() {
+    private Notification getNotification(String text) {
 
-        NotificationChannel channel = new NotificationChannel("channel_01", "My Channel", NotificationManager.IMPORTANCE_DEFAULT);
-
-        NotificationManager notificationManager = getSystemService(NotificationManager.class);
-        notificationManager.createNotificationChannel(channel);
+//        NotificationChannel channel = new NotificationChannel("channel_01", "My Channel", NotificationManager.IMPORTANCE_DEFAULT);
+//
+//        NotificationManager notificationManager = getSystemService(NotificationManager.class);
+//        notificationManager.createNotificationChannel(channel);
 
         Notification.Builder builder = new Notification.Builder(getApplicationContext(), "channel_01").setAutoCancel(true);
+        builder.setContentText(text);
+        builder.setSmallIcon(R.drawable.ic_launcher_background);
         return builder.build();
     }
 
