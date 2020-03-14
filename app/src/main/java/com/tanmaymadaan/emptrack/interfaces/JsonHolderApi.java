@@ -1,5 +1,6 @@
 package com.tanmaymadaan.emptrack.interfaces;
 
+import com.tanmaymadaan.emptrack.models.CheckInPOJO;
 import com.tanmaymadaan.emptrack.models.LocationPOJO;
 
 import retrofit2.Call;
@@ -21,4 +22,13 @@ public interface JsonHolderApi {
                                     @Field("lat") Double lat,
                                     @Field("lng") Double lng,
                                     @Field("timestamp") Integer timestamp);
+
+    @FormUrlEncoded
+    @POST("add-checkin")
+    Call<CheckInPOJO> postCheckIn(@Field("userId") String userId,
+                                  @Field("date") String date,
+                                  @Field("lat") Double lat,
+                                  @Field("lng") Double lng,
+                                  @Field("timestamp") Integer timestamp,
+                                  @Field("company") String company);
 }

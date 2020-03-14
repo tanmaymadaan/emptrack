@@ -58,7 +58,7 @@ public class LocationServiceGps extends Service {
             NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             mNotificationManager.notify(12345678, notification);
 
-            String myUrl = "http://192.168.1.4:4000/";
+            String myUrl = getString(R.string.server_url);
             Retrofit retrofit = new Retrofit.Builder()
                     .baseUrl(myUrl)
                     .addConverterFactory(GsonConverterFactory.create())
