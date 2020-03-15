@@ -5,6 +5,7 @@ import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Binder;
@@ -23,6 +24,8 @@ import android.widget.Toast;
 import com.tanmaymadaan.emptrack.interfaces.JsonHolderApi;
 import com.tanmaymadaan.emptrack.models.LocationPOJO;
 
+import java.util.Objects;
+
 public class LocationServiceGps extends Service {
     private final LocationServiceBinder binder = new LocationServiceBinder();
     private final String TAG = "BackgroundService";
@@ -30,8 +33,10 @@ public class LocationServiceGps extends Service {
     private LocationManager mLocationManager;
     private NotificationManager notificationManager;
 
-    private final int LOCATION_INTERVAL = 60000;
+    private final int LOCATION_INTERVAL = 10000;
     private final int LOCATION_DISTANCE = 10;
+    private int secs = 0;
+    private int distance = 0;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -52,38 +57,58 @@ public class LocationServiceGps extends Service {
         @Override
         public void onLocationChanged(Location location)
         {
+            secs++;
             mLastLocation = location;
-            Log.i(TAG, "LocationChanged: "+location);
-            Notification notification = getNotification("Tracking in progress :)");
-            NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            mNotificationManager.notify(12345678, notification);
+            Log.i(TAG, "LocationChanged: " + location);
 
-            String myUrl = getString(R.string.server_url);
-            Retrofit retrofit = new Retrofit.Builder()
-                    .baseUrl(myUrl)
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build();
 
-            JsonHolderApi jsonPlaceHolderApi = retrofit.create(JsonHolderApi.class);
+            if(secs % 12 == 0) {
+                //push to server
+                String myUrl = getString(R.string.server_url);
+                Retrofit retrofit = new Retrofit.Builder()
+                        .baseUrl(myUrl)
+                        .addConverterFactory(GsonConverterFactory.create())
+                        .build();
+
+                JsonHolderApi jsonPlaceHolderApi = retrofit.create(JsonHolderApi.class);
 
 //            LocationPOJO locationPOJO = new LocationPOJO();
-            Call<LocationPOJO> call = jsonPlaceHolderApi.postLocation("Tanmay", "2020-03-13", location.getLatitude(), location.getLongitude(), 234562);
-            call.enqueue(new Callback<LocationPOJO>() {
-                @Override
-                public void onResponse(Call<LocationPOJO> call, Response<LocationPOJO> response) {
-                    if(!response.isSuccessful()){
-                        Toast.makeText(getApplicationContext(), response.code(), Toast.LENGTH_LONG).show();
+                Call<LocationPOJO> call = jsonPlaceHolderApi.postLocation("Tanmay", "2020-03-13", location.getLatitude(), location.getLongitude(), 234562);
+                call.enqueue(new Callback<LocationPOJO>() {
+                    @Override
+                    public void onResponse(Call<LocationPOJO> call, Response<LocationPOJO> response) {
+                        if(!response.isSuccessful()){
+                            Toast.makeText(getApplicationContext(), response.code(), Toast.LENGTH_LONG).show();
+                        }
+                        Log.i("Success", "Saved Successfully");
+                        //Toast.makeText(getApplicationContext(), "Saved Successfully!", Toast.LENGTH_LONG).show();
                     }
-                    Log.i("Success", "Saved Successfully");
-                    //Toast.makeText(getApplicationContext(), "Saved Successfully!", Toast.LENGTH_LONG).show();
-                }
 
-                @Override
-                public void onFailure(Call<LocationPOJO> call, Throwable t) {
-                    Log.e("Error Location", t.getMessage());
-                    Toast.makeText(getApplicationContext(), t.getMessage(), Toast.LENGTH_LONG).show();
-                }
-            });
+                    @Override
+                    public void onFailure(Call<LocationPOJO> call, Throwable t) {
+                        Log.e("Error Location", t.getMessage());
+                        Toast.makeText(getApplicationContext(), t.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                });
+            } else {
+                //calc and add distance
+                SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", 0); // 0 - for private mode
+                String lat = pref.getString("LAT_OLD", null);
+                String lng = pref.getString("LNG_OLD", null);
+                Double dist = calcDist(Double.parseDouble(lat), Double.parseDouble(lng), location.getLatitude(), location.getLongitude());
+
+                dist = dist + Double.parseDouble(Objects.requireNonNull(pref.getString("DIST", null)));
+                Notification notification = getNotification("Travelled " + dist + " kms today :)");
+                NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                mNotificationManager.notify(12345678, notification);
+
+                SharedPreferences.Editor editor = pref.edit();
+                editor.putString("LAT_OLD", String.valueOf(location.getLatitude())).apply();
+                editor.putString("LNG_OLD", String.valueOf(location.getLongitude())).apply();
+                editor.putString("DIST", String.valueOf(dist));
+                editor.commit();
+            }
+
         }
 
         @Override
@@ -117,6 +142,12 @@ public class LocationServiceGps extends Service {
     {
         Log.i(TAG, "onCreate");
         startForeground(12345678, getNotification("Yoooo"));
+
+        SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", 0); // 0 - for private mode
+        SharedPreferences.Editor editor = pref.edit();
+        Double d = 0.00;
+        editor.putString("DIST", String.valueOf(d)).apply();
+        editor.commit();
     }
 
     @Override
@@ -177,5 +208,23 @@ public class LocationServiceGps extends Service {
         }
     }
 
+
+    public double calcDist(double lat1, double lon1, double lat2, double lon2)
+    {
+        final int R = 6371;
+        // Radius of the earth in km
+        double dLat = deg2rad(lat2 - lat1);
+        // deg2rad below
+        double dLon = deg2rad(lon2 - lon1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        double d = R * c;
+        // Distance in km
+        return d;
+    }
+    private double deg2rad(double deg)
+    {
+        return deg * (Math.PI / 180);
+    }
 }
 
