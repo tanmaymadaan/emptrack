@@ -1,4 +1,4 @@
-package com.tanmaymadaan.emptrack;
+package com.tanmaymadaan.emptrack.activities;
 
 import androidx.appcompat.app.AppCompatActivity;
 import retrofit2.Call;
@@ -10,9 +10,11 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import android.Manifest;
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.location.Location;
@@ -21,12 +23,13 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.Settings;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.ebanx.swipebtn.OnStateChangeListener;
+import com.ebanx.swipebtn.SwipeButton;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -37,12 +40,14 @@ import com.karumi.dexter.listener.PermissionDeniedResponse;
 import com.karumi.dexter.listener.PermissionGrantedResponse;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.single.PermissionListener;
+import com.tanmaymadaan.emptrack.R;
 import com.tanmaymadaan.emptrack.interfaces.JsonHolderApi;
 import com.tanmaymadaan.emptrack.models.CheckInPOJO;
+import com.tanmaymadaan.emptrack.services.LocationServiceGps;
 
 public class MainActivity extends AppCompatActivity {
 
-    Button start, stop, checkin;
+    //Button start, stop, checkin;
     TextView textView;
     EditText checkInLocEt;
 
@@ -50,10 +55,49 @@ public class MainActivity extends AppCompatActivity {
     public boolean mTracking = false;
     private FusedLocationProviderClient fusedLocationClient;
 
+    BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String kms = intent.getStringExtra("KMS");
+            textView.setText(kms + " kms");
+        }
+    };
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction("com.tanmaymadaan.emptrack");
+        registerReceiver(broadcastReceiver, intentFilter);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        unregisterReceiver(broadcastReceiver);
+    }
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        SwipeButton swipeButton = findViewById(R.id.swipeButton);
+        swipeButton.setOnStateChangeListener(new OnStateChangeListener() {
+            @Override
+            public void onStateChange(boolean active) {
+                if(active) {
+                    startService();
+                }
+                else {
+                    mTracking = false;
+                    locService.stopTracking();
+                    toggleButtons();
+                }
+                Toast.makeText(getApplicationContext(), "Active: " + active, Toast.LENGTH_LONG).show();
+            }
+        });
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         fusedLocationClient.getLastLocation()
@@ -67,28 +111,28 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
 
-        start = findViewById(R.id.startTracking);
-        stop = findViewById(R.id.stopTracking);
-        textView = findViewById(R.id.textView);
-        checkInLocEt = findViewById(R.id.checkInLoc);
-        checkin = findViewById(R.id.checkInButton);
+//        start = findViewById(R.id.startTracking);
+//        stop = findViewById(R.id.stopTracking);
+          textView = findViewById(R.id.textView2);
+//        checkInLocEt = findViewById(R.id.checkInLoc);
+//        checkin = findViewById(R.id.checkInButton);
 
         final Intent intent = new Intent(this.getApplication(), LocationServiceGps.class);
         this.getApplication().startService(intent);
         this.getApplication().bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
 
-        start.setOnClickListener(v -> startService());
-
-        stop.setOnClickListener(v -> {
-            mTracking = false;
-            locService.stopTracking();
-            toggleButtons();
-        });
-
-        checkin.setOnClickListener(v -> {
-            String loc = checkInLocEt.getText().toString().trim();
-            checkIn(loc);
-        });
+//        start.setOnClickListener(v -> startService());
+//
+//        stop.setOnClickListener(v -> {
+//            mTracking = false;
+//            locService.stopTracking();
+//            toggleButtons();
+//        });
+//
+//        checkin.setOnClickListener(v -> {
+//            String loc = checkInLocEt.getText().toString().trim();
+//            checkIn(loc);
+//        });
 
     }
 
@@ -124,9 +168,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void toggleButtons() {
-        start.setEnabled(!mTracking);
-        stop.setEnabled(mTracking);
-        textView.setText( (mTracking) ? "Tracking" : "GPS Ready");
+        //start.setEnabled(!mTracking);
+        //stop.setEnabled(mTracking);
+        //textView.setText( (mTracking) ? "Tracking" : "GPS Ready");
     }
 
     private void openSettings() {
@@ -144,8 +188,8 @@ public class MainActivity extends AppCompatActivity {
             String name = className.getClassName();
             if (name.endsWith("LocationServiceGps")) {
                 locService = ((LocationServiceGps.LocationServiceBinder) service).getService();
-                start.setEnabled(true);
-                textView.setText("GPS Ready");
+                //start.setEnabled(true);
+                //textView.setText("GPS Ready");
             }
         }
 

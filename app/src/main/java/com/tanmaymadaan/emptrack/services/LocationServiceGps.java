@@ -1,5 +1,6 @@
-package com.tanmaymadaan.emptrack;
+package com.tanmaymadaan.emptrack.services;
 
+import android.app.IntentService;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.Service;
@@ -12,6 +13,7 @@ import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 
+import androidx.annotation.Nullable;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -19,8 +21,10 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 import android.util.Log;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.tanmaymadaan.emptrack.R;
 import com.tanmaymadaan.emptrack.interfaces.JsonHolderApi;
 import com.tanmaymadaan.emptrack.models.LocationPOJO;
 
@@ -33,6 +37,7 @@ public class LocationServiceGps extends Service {
     private LocationManager mLocationManager;
     private NotificationManager notificationManager;
 
+    private TextView textView;
     private final int LOCATION_INTERVAL = 10000;
     private final int LOCATION_DISTANCE = 10;
     private int secs = 0;
@@ -63,6 +68,23 @@ public class LocationServiceGps extends Service {
 
 
             if(secs % 12 == 0) {
+
+                SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", 0); // 0 - for private mode
+                String lat = pref.getString("LAT_OLD", null);
+                String lng = pref.getString("LNG_OLD", null);
+                Double dist = calcDist(Double.parseDouble(lat), Double.parseDouble(lng), location.getLatitude(), location.getLongitude());
+
+                dist = dist + Double.parseDouble(Objects.requireNonNull(pref.getString("DIST", null)));
+                Notification notification = getNotification("Travelled " + dist + " kms today :)");
+                NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                mNotificationManager.notify(12345678, notification);
+
+                SharedPreferences.Editor editor = pref.edit();
+                editor.putString("LAT_OLD", String.valueOf(location.getLatitude())).apply();
+                editor.putString("LNG_OLD", String.valueOf(location.getLongitude())).apply();
+                editor.putString("DIST", String.valueOf(dist));
+                editor.commit();
+
                 //push to server
                 String myUrl = getString(R.string.server_url);
                 Retrofit retrofit = new Retrofit.Builder()
@@ -72,7 +94,7 @@ public class LocationServiceGps extends Service {
 
                 JsonHolderApi jsonPlaceHolderApi = retrofit.create(JsonHolderApi.class);
 
-//            LocationPOJO locationPOJO = new LocationPOJO();
+//              LocationPOJO locationPOJO = new LocationPOJO();
                 Call<LocationPOJO> call = jsonPlaceHolderApi.postLocation("Tanmay", "2020-03-13", location.getLatitude(), location.getLongitude(), 234562);
                 call.enqueue(new Callback<LocationPOJO>() {
                     @Override
@@ -97,7 +119,13 @@ public class LocationServiceGps extends Service {
                 String lng = pref.getString("LNG_OLD", null);
                 Double dist = calcDist(Double.parseDouble(lat), Double.parseDouble(lng), location.getLatitude(), location.getLongitude());
 
+
+
                 dist = dist + Double.parseDouble(Objects.requireNonNull(pref.getString("DIST", null)));
+                Intent intent1 = new Intent();
+                intent1.setAction("com.tanmaymadaan.emptrack");
+                intent1.putExtra("KMS", dist+"");
+                sendBroadcast(intent1);
                 Notification notification = getNotification("Travelled " + dist + " kms today :)");
                 NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                 mNotificationManager.notify(12345678, notification);
