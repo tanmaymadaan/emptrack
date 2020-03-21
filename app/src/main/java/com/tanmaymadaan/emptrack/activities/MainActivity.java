@@ -1,5 +1,6 @@
 package com.tanmaymadaan.emptrack.activities;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -23,8 +24,10 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -45,11 +48,18 @@ import com.tanmaymadaan.emptrack.interfaces.JsonHolderApi;
 import com.tanmaymadaan.emptrack.models.CheckInPOJO;
 import com.tanmaymadaan.emptrack.services.LocationServiceGps;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 public class MainActivity extends AppCompatActivity {
 
     //Button start, stop, checkin;
     TextView textView;
     EditText checkInLocEt;
+    String date;
+    ImageView imageView;
+    Boolean checkInStatus;
 
     public LocationServiceGps locService;
     public boolean mTracking = false;
@@ -83,37 +93,29 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        date = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+
+        checkInStatus = false;
         SwipeButton swipeButton = findViewById(R.id.swipeButton);
-        swipeButton.setOnStateChangeListener(new OnStateChangeListener() {
-            @Override
-            public void onStateChange(boolean active) {
-                if(active) {
-                    startService();
-                }
-                else {
-                    mTracking = false;
-                    locService.stopTracking();
-                    toggleButtons();
-                }
-                Toast.makeText(getApplicationContext(), "Active: " + active, Toast.LENGTH_LONG).show();
+        swipeButton.setOnStateChangeListener(active -> {
+            if(active) {
+                startService();
             }
+            else {
+                mTracking = false;
+                locService.stopTracking();
+                toggleButtons();
+            }
+            Toast.makeText(getApplicationContext(), "Active: " + active, Toast.LENGTH_LONG).show();
         });
 
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        fusedLocationClient.getLastLocation()
-                .addOnSuccessListener(new OnSuccessListener<Location>() {
-                    @Override
-                    public void onSuccess(Location location) {
-                        SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", 0); // 0 - for private mode
-                        SharedPreferences.Editor editor = pref.edit();
-                        editor.putString("LAT_OLD", String.valueOf(location.getLatitude())).apply();
-                        editor.putString("LNG_OLD", String.valueOf(location.getLongitude())).apply();
-                    }
-                });
+        imageView = findViewById(R.id.imageView);
+        imageView.setOnClickListener(v -> imageClicked());
+
 
 //        start = findViewById(R.id.startTracking);
 //        stop = findViewById(R.id.stopTracking);
-          textView = findViewById(R.id.textView2);
+        textView = findViewById(R.id.textView2);
 //        checkInLocEt = findViewById(R.id.checkInLoc);
 //        checkin = findViewById(R.id.checkInButton);
 
@@ -136,35 +138,94 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private void imageClicked(){
+        if(!checkInStatus){
+            checkInStatus = true;
+            final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+            final View view = getLayoutInflater().inflate(R.layout.layout_checkin, null);
+            final EditText companyEt = view.findViewById(R.id.companyEt);
+            Button submit = view.findViewById(R.id.submitBtn);
+            builder.setView(view);
+            final AlertDialog alert = builder.create();
+            submit.setOnClickListener(v -> {
+                alert.dismiss();
+                checkIn(companyEt.getText().toString().trim());
+                imageView.setImageResource(R.drawable.ic_beenhere_black_24dp);
+            });
+            alert.show();
+        } else {
+            checkInStatus = false;
+            imageView.setImageResource(R.drawable.ic_add_location_black_24dp);
+            checkout();
+        }
+    }
+
+    private void checkout(){
+        String myUrl = getString(R.string.server_url);
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(myUrl)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        JsonHolderApi jsonPlaceHolderApi = retrofit.create(JsonHolderApi.class);
+        Call<CheckInPOJO> call = jsonPlaceHolderApi.checkOut("Tanmay");
+        call.enqueue(new Callback<CheckInPOJO>() {
+            @Override
+            public void onResponse(Call<CheckInPOJO> call, Response<CheckInPOJO> response) {
+                if(!response.isSuccessful()){
+                    Toast.makeText(getApplicationContext(), response.message(), Toast.LENGTH_LONG).show();
+                }
+                Log.i("Success", "Saved Successfully");
+            }
+
+            @Override
+            public void onFailure(Call<CheckInPOJO> call, Throwable t) {
+                Log.e("Error Location", t.getMessage());
+                Toast.makeText(getApplicationContext(), t.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+
+    }
+
     private void startService() {
-        SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", 0); // 0 - for private mode
-        SharedPreferences.Editor editor = pref.edit();
-        Double d = 0.00;
-        editor.putString("DIST", String.valueOf(d)).apply();
-        editor.commit();
 
-        Dexter.withActivity(this)
-                .withPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-                .withListener(new PermissionListener() {
-                    @Override
-                    public void onPermissionGranted(PermissionGrantedResponse response) {
-                        locService.startTracking();
-                        mTracking = true;
-                        toggleButtons();
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        fusedLocationClient.getLastLocation()
+                .addOnSuccessListener(location -> {
+                    SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", 0); // 0 - for private mode
+                    SharedPreferences.Editor editor = pref.edit();
+                    editor.putString("LAT_OLD_" + date, String.valueOf(location.getLatitude())).apply();
+                    editor.putString("LNG_OLD_" + date, String.valueOf(location.getLongitude())).apply();
+                    Double d = 0.00;
+                    if(pref.getString("DIST_" + date, null) == null) {
+                        editor.putString("DIST_" + date, String.valueOf(d)).apply();
+                        editor.commit();
                     }
 
-                    @Override
-                    public void onPermissionDenied(PermissionDeniedResponse response) {
-                        if (response.isPermanentlyDenied()) {
-                            openSettings();
-                        }
-                    }
+                    Dexter.withActivity(this)
+                            .withPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+                            .withListener(new PermissionListener() {
+                                @Override
+                                public void onPermissionGranted(PermissionGrantedResponse response) {
+                                    locService.startTracking();
+                                    mTracking = true;
+                                    toggleButtons();
+                                }
 
-                    @Override
-                    public void onPermissionRationaleShouldBeShown(PermissionRequest permission, PermissionToken token) {
-                        token.continuePermissionRequest();
-                    }
-                }).check();
+                                @Override
+                                public void onPermissionDenied(PermissionDeniedResponse response) {
+                                    if (response.isPermanentlyDenied()) {
+                                        openSettings();
+                                    }
+                                }
+
+                                @Override
+                                public void onPermissionRationaleShouldBeShown(PermissionRequest permission, PermissionToken token) {
+                                    token.continuePermissionRequest();
+                                }
+                            }).check();
+                });
+
     }
 
     private void toggleButtons() {
@@ -217,7 +278,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void checkIn(String company){
-
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         fusedLocationClient.getLastLocation()
                 .addOnSuccessListener(this, new OnSuccessListener<Location>() {
                     @Override
@@ -231,12 +292,12 @@ public class MainActivity extends AppCompatActivity {
                                     .build();
 
                             JsonHolderApi jsonPlaceHolderApi = retrofit.create(JsonHolderApi.class);
-                            Call<CheckInPOJO> call = jsonPlaceHolderApi.postCheckIn("Tanmay", "2020-03-13", location.getLatitude(), location.getLongitude(), 234562, company);
+                            Call<CheckInPOJO> call = jsonPlaceHolderApi.postCheckIn("Tanmay", date, location.getLatitude(), location.getLongitude(), 234562, company);
                             call.enqueue(new Callback<CheckInPOJO>() {
                                 @Override
                                 public void onResponse(Call<CheckInPOJO> call, Response<CheckInPOJO> response) {
                                     if(!response.isSuccessful()){
-                                        Toast.makeText(getApplicationContext(), response.code(), Toast.LENGTH_LONG).show();
+                                        Toast.makeText(getApplicationContext(), response.message(), Toast.LENGTH_LONG).show();
                                     }
                                     Log.i("Success", "Saved Successfully");
                                 }
@@ -247,6 +308,11 @@ public class MainActivity extends AppCompatActivity {
                                     Toast.makeText(getApplicationContext(), t.getMessage(), Toast.LENGTH_LONG).show();
                                 }
                             });
+
+                            SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", 0); // 0 - for private mode
+                            SharedPreferences.Editor editor = pref.edit();
+                            editor.putString("CURRENT_LOC", company).apply();
+                            editor.commit();
                         } else {
                             Toast.makeText(getApplicationContext(), "Error fetching location", Toast.LENGTH_LONG).show();
                         }

@@ -7,7 +7,9 @@ import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
+import retrofit2.http.GET;
 import retrofit2.http.POST;
+import retrofit2.http.Path;
 
 public interface JsonHolderApi {
 
@@ -24,11 +26,14 @@ public interface JsonHolderApi {
                                     @Field("timestamp") Integer timestamp);
 
     @FormUrlEncoded
-    @POST("add-checkin")
+    @POST("checkIn")
     Call<CheckInPOJO> postCheckIn(@Field("userId") String userId,
                                   @Field("date") String date,
                                   @Field("lat") Double lat,
                                   @Field("lng") Double lng,
                                   @Field("timestamp") Integer timestamp,
                                   @Field("company") String company);
+
+    @GET("checkOut/{id}")
+    Call<CheckInPOJO> checkOut(@Path("id") String id);
 }

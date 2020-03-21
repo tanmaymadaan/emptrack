@@ -28,6 +28,9 @@ import com.tanmaymadaan.emptrack.R;
 import com.tanmaymadaan.emptrack.interfaces.JsonHolderApi;
 import com.tanmaymadaan.emptrack.models.LocationPOJO;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 import java.util.Objects;
 
 public class LocationServiceGps extends Service {
@@ -69,20 +72,22 @@ public class LocationServiceGps extends Service {
 
             if(secs % 12 == 0) {
 
+                String date = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
                 SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", 0); // 0 - for private mode
-                String lat = pref.getString("LAT_OLD", null);
-                String lng = pref.getString("LNG_OLD", null);
+                String lat = pref.getString("LAT_OLD_" + date, null);
+                String lng = pref.getString("LNG_OLD_" + date, null);
                 Double dist = calcDist(Double.parseDouble(lat), Double.parseDouble(lng), location.getLatitude(), location.getLongitude());
 
-                dist = dist + Double.parseDouble(Objects.requireNonNull(pref.getString("DIST", null)));
+
+                dist = dist + Double.parseDouble(Objects.requireNonNull(pref.getString("DIST_" + date, null)));
                 Notification notification = getNotification("Travelled " + dist + " kms today :)");
                 NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                 mNotificationManager.notify(12345678, notification);
 
                 SharedPreferences.Editor editor = pref.edit();
-                editor.putString("LAT_OLD", String.valueOf(location.getLatitude())).apply();
-                editor.putString("LNG_OLD", String.valueOf(location.getLongitude())).apply();
-                editor.putString("DIST", String.valueOf(dist));
+                editor.putString("LAT_OLD_" + date, String.valueOf(location.getLatitude())).apply();
+                editor.putString("LNG_OLD_" + date, String.valueOf(location.getLongitude())).apply();
+                editor.putString("DIST_" + date, String.format("%.2f", dist)).apply();
                 editor.commit();
 
                 //push to server
@@ -95,7 +100,7 @@ public class LocationServiceGps extends Service {
                 JsonHolderApi jsonPlaceHolderApi = retrofit.create(JsonHolderApi.class);
 
 //              LocationPOJO locationPOJO = new LocationPOJO();
-                Call<LocationPOJO> call = jsonPlaceHolderApi.postLocation("Tanmay", "2020-03-13", location.getLatitude(), location.getLongitude(), 234562);
+                Call<LocationPOJO> call = jsonPlaceHolderApi.postLocation("Tanmay", date, location.getLatitude(), location.getLongitude(), 234562);
                 call.enqueue(new Callback<LocationPOJO>() {
                     @Override
                     public void onResponse(Call<LocationPOJO> call, Response<LocationPOJO> response) {
@@ -114,26 +119,27 @@ public class LocationServiceGps extends Service {
                 });
             } else {
                 //calc and add distance
+                String date = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
                 SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", 0); // 0 - for private mode
-                String lat = pref.getString("LAT_OLD", null);
-                String lng = pref.getString("LNG_OLD", null);
+                String lat = pref.getString("LAT_OLD_" + date, null);
+                String lng = pref.getString("LNG_OLD_" + date, null);
+
+
                 Double dist = calcDist(Double.parseDouble(lat), Double.parseDouble(lng), location.getLatitude(), location.getLongitude());
 
-
-
-                dist = dist + Double.parseDouble(Objects.requireNonNull(pref.getString("DIST", null)));
+                dist = dist + Double.parseDouble(Objects.requireNonNull(pref.getString("DIST_" + date, null)));
                 Intent intent1 = new Intent();
                 intent1.setAction("com.tanmaymadaan.emptrack");
-                intent1.putExtra("KMS", dist+"");
+                intent1.putExtra("KMS", String.format("%.2f", dist)+"");
                 sendBroadcast(intent1);
                 Notification notification = getNotification("Travelled " + dist + " kms today :)");
                 NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                 mNotificationManager.notify(12345678, notification);
 
                 SharedPreferences.Editor editor = pref.edit();
-                editor.putString("LAT_OLD", String.valueOf(location.getLatitude())).apply();
-                editor.putString("LNG_OLD", String.valueOf(location.getLongitude())).apply();
-                editor.putString("DIST", String.valueOf(dist));
+                editor.putString("LAT_OLD_" + date, String.valueOf(location.getLatitude())).apply();
+                editor.putString("LNG_OLD_" + date, String.valueOf(location.getLongitude())).apply();
+                editor.putString("DIST_" + date, String.format("%.2f", dist)).apply();
                 editor.commit();
             }
 
