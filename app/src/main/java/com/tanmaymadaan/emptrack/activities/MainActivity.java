@@ -44,6 +44,7 @@ import com.karumi.dexter.listener.PermissionGrantedResponse;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.single.PermissionListener;
 import com.tanmaymadaan.emptrack.R;
+import com.tanmaymadaan.emptrack.classes.ProgressRequestBody;
 import com.tanmaymadaan.emptrack.interfaces.JsonHolderApi;
 import com.tanmaymadaan.emptrack.models.CheckInPOJO;
 import com.tanmaymadaan.emptrack.services.LocationServiceGps;
@@ -110,7 +111,10 @@ public class MainActivity extends AppCompatActivity {
         });
 
         imageView = findViewById(R.id.imageView);
-        imageView.setOnClickListener(v -> imageClicked());
+        imageView.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ImageUpload.class);
+            startActivity(intent);
+        });
 
 
 //        start = findViewById(R.id.startTracking);
@@ -138,27 +142,27 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void imageClicked(){
-        if(!checkInStatus){
-            checkInStatus = true;
-            final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-            final View view = getLayoutInflater().inflate(R.layout.layout_checkin, null);
-            final EditText companyEt = view.findViewById(R.id.companyEt);
-            Button submit = view.findViewById(R.id.submitBtn);
-            builder.setView(view);
-            final AlertDialog alert = builder.create();
-            submit.setOnClickListener(v -> {
-                alert.dismiss();
-                checkIn(companyEt.getText().toString().trim());
-                imageView.setImageResource(R.drawable.ic_beenhere_black_24dp);
-            });
-            alert.show();
-        } else {
-            checkInStatus = false;
-            imageView.setImageResource(R.drawable.ic_add_location_black_24dp);
-            checkout();
-        }
-    }
+//    private void imageClicked(){
+//        if(!checkInStatus){
+//            checkInStatus = true;
+//            final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+//            final View view = getLayoutInflater().inflate(R.layout.layout_checkin, null);
+//            final EditText companyEt = view.findViewById(R.id.companyEt);
+//            Button submit = view.findViewById(R.id.submitBtn);
+//            builder.setView(view);
+//            final AlertDialog alert = builder.create();
+//            submit.setOnClickListener(v -> {
+//                alert.dismiss();
+//                checkIn(companyEt.getText().toString().trim());
+//                imageView.setImageResource(R.drawable.ic_beenhere_black_24dp);
+//            });
+//            alert.show();
+//        } else {
+//            checkInStatus = false;
+//            imageView.setImageResource(R.drawable.ic_add_location_black_24dp);
+//            checkout();
+//        }
+//    }
 
     private void checkout(){
         String myUrl = getString(R.string.server_url);

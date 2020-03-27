@@ -35,6 +35,7 @@
         android:text="Check in"
         android:id="@+id/checkInButton"/>
     -->
+
     <com.ebanx.swipebtn.SwipeButton
         android:id="@+id/swipeButton"
         android:layout_width="359dp"
@@ -96,10 +97,11 @@
         android:id="@+id/textView4"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="15dp"
+        android:layout_marginTop="30dp"
         android:text="Currently at"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/imageView" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -2,6 +2,7 @@ package com.tanmaymadaan.emptrack.services;
 
 import android.app.IntentService;
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
@@ -224,13 +225,14 @@ public class LocationServiceGps extends Service {
 
     private Notification getNotification(String text) {
 
-//        NotificationChannel channel = new NotificationChannel("channel_01", "My Channel", NotificationManager.IMPORTANCE_DEFAULT);
-//
-//        NotificationManager notificationManager = getSystemService(NotificationManager.class);
-//        notificationManager.createNotificationChannel(channel);
+        NotificationChannel channel = new NotificationChannel("channel_01", "My Channel", NotificationManager.IMPORTANCE_DEFAULT);
+
+        NotificationManager notificationManager = getSystemService(NotificationManager.class);
+        notificationManager.createNotificationChannel(channel);
 
         Notification.Builder builder = new Notification.Builder(getApplicationContext(), "channel_01").setAutoCancel(true);
         builder.setContentText(text);
+
         builder.setSmallIcon(R.drawable.ic_launcher_background);
         return builder.build();
     }
