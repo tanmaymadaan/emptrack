@@ -37,7 +37,9 @@ public interface JsonHolderApi {
                                   @Field("lat") Double lat,
                                   @Field("lng") Double lng,
                                   @Field("timestamp") Integer timestamp,
-                                  @Field("company") String company);
+                                  @Field("company") String company,
+                                  @Field("purpose") String purpose,
+                                  @Field("image") String path);
 
     @GET("checkOut/{id}")
     Call<CheckInPOJO> checkOut(@Path("id") String id);

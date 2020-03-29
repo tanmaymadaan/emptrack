@@ -11,48 +11,65 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.FrameLayout;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.tanmaymadaan.emptrack.R;
 import com.tanmaymadaan.emptrack.classes.ProgressRequestBody;
 import com.tanmaymadaan.emptrack.interfaces.JsonHolderApi;
+import com.tanmaymadaan.emptrack.models.CheckInPOJO;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import static android.Manifest.permission.CAMERA;
 import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 import static android.view.View.GONE;
 
-public class ImageUpload extends AppCompatActivity implements ProgressRequestBody.UploadCallbacks {
+public class CheckInActivity extends AppCompatActivity implements ProgressRequestBody.UploadCallbacks{
+
+    //TODO: Change checkInStatus in SharedPref
+
+    EditText companyEt, purposeEt;
+//    ImageView image;
+    Button clickPicBtn, checkInBtn;
 
     JsonHolderApi jsonHolderApi;
     Uri picUri;
@@ -61,27 +78,28 @@ public class ImageUpload extends AppCompatActivity implements ProgressRequestBod
     private ArrayList<String> permissions = new ArrayList<>();
     private final static int ALL_PERMISSIONS_RESULT = 107;
     private final static int IMAGE_RESULT = 200;
-    Button fabCamera, fabUpload;
     Bitmap mBitmap;
     TextView textView;
     byte[] byteArray;
-    FrameLayout frameLayout;
+    private FusedLocationProviderClient fusedLocationClient;
+    String date;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_image_upload);
+        setContentView(R.layout.activity_check_in);
 
-        fabCamera = findViewById(R.id.fab);
-        fabUpload = findViewById(R.id.fabUpload);
-        textView = findViewById(R.id.textView);
-        frameLayout = findViewById(R.id.frameLayout);
+        companyEt = findViewById(R.id.companyCheckIn);
+        purposeEt = findViewById(R.id.purposeCheckIn);
+//        image = findViewById(R.id.imageCheckIn);
+        clickPicBtn = findViewById(R.id.clickPicBtn);
+        checkInBtn = findViewById(R.id.checkInBtn);
 
-
-        fabCamera.setOnClickListener(v -> {
+        clickPicBtn.setOnClickListener(v -> {
             startActivityForResult(getPickImageChooserIntent(), IMAGE_RESULT);
         });
-        fabUpload.setOnClickListener(v -> {
+
+        checkInBtn.setOnClickListener(v -> {
             if (mBitmap != null)
                 multipartImageUpload();
             else {
@@ -90,21 +108,70 @@ public class ImageUpload extends AppCompatActivity implements ProgressRequestBod
         });
 
         askPermissions();
+
+        date = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
     }
+
+    private void checkIn(String company, String purpose, String filename){
+        String myUrl = getString(R.string.server_url);
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(myUrl)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        JsonHolderApi jsonPlaceHolderApi = retrofit.create(JsonHolderApi.class);
+        //TODO: userId from SharedPref
+        //TODO: timestamp automatic
+        Call<CheckInPOJO> call = jsonPlaceHolderApi.postCheckIn("paramh44", date, 78.66, 89.99, 234562, company, purpose, filename);
+        call.enqueue(new Callback<CheckInPOJO>() {
+            @Override
+            public void onResponse(Call<CheckInPOJO> call, Response<CheckInPOJO> response) {
+                if(!response.isSuccessful()){
+                    Toast.makeText(getApplicationContext(), response.message(), Toast.LENGTH_LONG).show();
+                }
+                Log.i("Success", "Saved Successfully");
+            }
+
+            @Override
+            public void onFailure(Call<CheckInPOJO> call, Throwable t) {
+                Log.e("Error Location", t.getMessage());
+                Toast.makeText(getApplicationContext(), t.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+
+        SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", 0); // 0 - for private mode
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putString("CURRENT_LOC", company).apply();
+        editor.commit();
+//        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+//        fusedLocationClient.getLastLocation()
+//                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+//                    @Override
+//                    public void onSuccess(Location location) {
+//                        // Got last known location. In some rare situations this can be null.
+//                        if (location != null) {
+//
+//                        } else {
+//                            Toast.makeText(getApplicationContext(), "Error fetching location", Toast.LENGTH_LONG).show();
+//                        }
+//                    }
+//                });
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == Activity.RESULT_OK) {
 
-            ImageView imageView = findViewById(R.id.imageView);
+            ImageView imageView = findViewById(R.id.imageCheckIn);
 
             if (requestCode == IMAGE_RESULT) {
 
 
                 String filePath = getImageFilePath(data);
                 if (filePath != null) {
-                    frameLayout.setVisibility(GONE);
+                    checkInBtn.setVisibility(GONE);
                     mBitmap = BitmapFactory.decodeFile(filePath);
                     getByteArrayInBackground();
                     imageView.setImageBitmap(mBitmap);
@@ -128,7 +195,7 @@ public class ImageUpload extends AppCompatActivity implements ProgressRequestBod
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        frameLayout.setVisibility(View.VISIBLE);
+                        checkInBtn.setVisibility(View.VISIBLE);
                     }
                 });
 
@@ -214,7 +281,8 @@ public class ImageUpload extends AppCompatActivity implements ProgressRequestBod
         OkHttpClient client = new OkHttpClient.Builder().build();
 
         //change the ip to yours.
-        jsonHolderApi = new Retrofit.Builder().baseUrl("http://192.168.1.5:3000").client(client).build().create(JsonHolderApi.class);
+//        jsonHolderApi = new Retrofit.Builder().baseUrl(getString(R.string.server_url)).client(client).build().create(JsonHolderApi.class);
+        jsonHolderApi = new Retrofit.Builder().baseUrl("http://192.168.1.6:3000").client(client).build().create(JsonHolderApi.class);
     }
 
     private void showMessageOKCancel(String message, DialogInterface.OnClickListener okListener) {
@@ -278,7 +346,7 @@ public class ImageUpload extends AppCompatActivity implements ProgressRequestBod
                 fos.flush();
                 fos.close();
 
-                textView.setTextColor(Color.BLUE);
+                //textView.setTextColor(Color.BLUE);
 
                 ProgressRequestBody fileBody = new ProgressRequestBody(file, this);
                 MultipartBody.Part body = MultipartBody.Part.createFormData("upload", file.getName(), fileBody);
@@ -288,13 +356,20 @@ public class ImageUpload extends AppCompatActivity implements ProgressRequestBod
                 req.enqueue(new Callback<ResponseBody>() {
                     @Override
                     public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                        Toast.makeText(getApplicationContext(), response.code() + " ", Toast.LENGTH_SHORT).show();
+                        try {
+                            String company = companyEt.getText().toString().trim();
+                            String purpose = purposeEt.getText().toString().trim();
+                            checkIn(company, purpose, response.body().string());
+//                            Toast.makeText(getApplicationContext(), response.body().string() + " ", Toast.LENGTH_SHORT).show();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
 
                     @Override
                     public void onFailure(Call<ResponseBody> call, Throwable t) {
-                        textView.setText("Uploaded Failed!");
-                        textView.setTextColor(Color.RED);
+//                        textView.setText("Uploaded Failed!");
+//                        textView.setTextColor(Color.RED);
                         Toast.makeText(getApplicationContext(), "Request failed", Toast.LENGTH_SHORT).show();
                         t.printStackTrace();
                     }
@@ -366,24 +441,23 @@ public class ImageUpload extends AppCompatActivity implements ProgressRequestBod
 
     @Override
     public void onProgressUpdate(int percentage) {
-        textView.setText(percentage + "%");
+//        textView.setText(percentage + "%");
     }
 
     @Override
     public void onError() {
-        textView.setText("Uploaded Failed!");
-        textView.setTextColor(Color.RED);
+//        textView.setText("Uploaded Failed!");
+//        textView.setTextColor(Color.RED);
     }
 
     @Override
     public void onFinish() {
-        textView.setText("Uploaded Successfully");
+//        textView.setText("Uploaded Successfully");
     }
 
     @Override
     public void uploadStart() {
-        textView.setText("0%");
+//        textView.setText("0%");
         Toast.makeText(getApplicationContext(), "Upload started", Toast.LENGTH_SHORT).show();
     }
-
 }

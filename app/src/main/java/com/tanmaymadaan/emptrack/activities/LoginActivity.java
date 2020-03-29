@@ -8,6 +8,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
@@ -60,7 +61,9 @@ public class LoginActivity extends AppCompatActivity {
                     //Log.i("Success", userPOJO.getCompanyCode() + "\\\\\\" + userPOJO.getUserCode() + "\\\\\\" + userPOJO.getPassCode() + "\\\\" + userPOJO.getName());
                 }
                 UserPOJO userPOJO = response.body();
-
+                Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                intent.putExtra("user", userPOJO);
+                startActivity(intent);
                 //Log.i("Success", "Login Successfully");
             }
 

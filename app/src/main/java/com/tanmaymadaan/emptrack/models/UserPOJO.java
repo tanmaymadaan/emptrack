@@ -1,6 +1,8 @@
 package com.tanmaymadaan.emptrack.models;
 
-public class UserPOJO {
+import java.io.Serializable;
+
+public class UserPOJO implements Serializable {
     String name;
 
     public UserPOJO(String name, String companyCode, String userCode, String passCode) {

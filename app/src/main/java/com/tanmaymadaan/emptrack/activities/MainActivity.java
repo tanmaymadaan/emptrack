@@ -47,6 +47,7 @@ import com.tanmaymadaan.emptrack.R;
 import com.tanmaymadaan.emptrack.classes.ProgressRequestBody;
 import com.tanmaymadaan.emptrack.interfaces.JsonHolderApi;
 import com.tanmaymadaan.emptrack.models.CheckInPOJO;
+import com.tanmaymadaan.emptrack.models.UserPOJO;
 import com.tanmaymadaan.emptrack.services.LocationServiceGps;
 
 import java.text.SimpleDateFormat;
@@ -55,8 +56,14 @@ import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
+    //TODO: Add History button
+    //TODO: Add login info to SharedPref when users login (in onCreate (if not already logged in))
+    //TODO: Add swipeStatus to SharePref
+    //TODO: Fetch checkInStatus from SharedPref and display checkInBtn or checkOutBtn accordingly
+
+
     //Button start, stop, checkin;
-    TextView textView;
+    TextView textView, textView2;
     EditText checkInLocEt;
     String date;
     ImageView imageView;
@@ -94,6 +101,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Intent intent22 = getIntent();
+        UserPOJO userPOJO = (UserPOJO) intent22.getSerializableExtra("user");
+        textView2 = findViewById(R.id.textView4);
+        textView2.setText(userPOJO.getName());
         date = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
 
         checkInStatus = false;
@@ -279,49 +290,6 @@ public class MainActivity extends AppCompatActivity {
         builder.setContentText(text);
         builder.setSmallIcon(R.drawable.ic_launcher_background);
         return builder.build();
-    }
-
-    private void checkIn(String company){
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        fusedLocationClient.getLastLocation()
-                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                    @Override
-                    public void onSuccess(Location location) {
-                        // Got last known location. In some rare situations this can be null.
-                        if (location != null) {
-                            String myUrl = getString(R.string.server_url);
-                            Retrofit retrofit = new Retrofit.Builder()
-                                    .baseUrl(myUrl)
-                                    .addConverterFactory(GsonConverterFactory.create())
-                                    .build();
-
-                            JsonHolderApi jsonPlaceHolderApi = retrofit.create(JsonHolderApi.class);
-                            Call<CheckInPOJO> call = jsonPlaceHolderApi.postCheckIn("Tanmay", date, location.getLatitude(), location.getLongitude(), 234562, company);
-                            call.enqueue(new Callback<CheckInPOJO>() {
-                                @Override
-                                public void onResponse(Call<CheckInPOJO> call, Response<CheckInPOJO> response) {
-                                    if(!response.isSuccessful()){
-                                        Toast.makeText(getApplicationContext(), response.message(), Toast.LENGTH_LONG).show();
-                                    }
-                                    Log.i("Success", "Saved Successfully");
-                                }
-
-                                @Override
-                                public void onFailure(Call<CheckInPOJO> call, Throwable t) {
-                                    Log.e("Error Location", t.getMessage());
-                                    Toast.makeText(getApplicationContext(), t.getMessage(), Toast.LENGTH_LONG).show();
-                                }
-                            });
-
-                            SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", 0); // 0 - for private mode
-                            SharedPreferences.Editor editor = pref.edit();
-                            editor.putString("CURRENT_LOC", company).apply();
-                            editor.commit();
-                        } else {
-                            Toast.makeText(getApplicationContext(), "Error fetching location", Toast.LENGTH_LONG).show();
-                        }
-                    }
-                });
     }
 
 }
