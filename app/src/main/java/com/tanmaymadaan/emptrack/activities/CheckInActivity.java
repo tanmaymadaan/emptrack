@@ -120,15 +120,22 @@ public class CheckInActivity extends AppCompatActivity implements ProgressReques
                 .build();
 
         JsonHolderApi jsonPlaceHolderApi = retrofit.create(JsonHolderApi.class);
-        //TODO: userId from SharedPref
+       //TODO; location lat and lng
         //TODO: timestamp automatic
-        Call<CheckInPOJO> call = jsonPlaceHolderApi.postCheckIn("paramh44", date, 78.66, 89.99, 234562, company, purpose, filename);
+        SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", 0);// 0 - for private mode
+        SharedPreferences.Editor editor = pref.edit();
+        String uid = pref.getString("USER_UID", null);
+
+        Call<CheckInPOJO> call = jsonPlaceHolderApi.postCheckIn(uid, date, 78.66, 89.99, 234562, company, purpose, filename);
         call.enqueue(new Callback<CheckInPOJO>() {
             @Override
             public void onResponse(Call<CheckInPOJO> call, Response<CheckInPOJO> response) {
                 if(!response.isSuccessful()){
                     Toast.makeText(getApplicationContext(), response.message(), Toast.LENGTH_LONG).show();
                 }
+                editor.putString("CHECKIN_STATUS", "Active").apply();
+                editor.putString("CHECKIN_COMPANY", company).apply();
+
                 Log.i("Success", "Saved Successfully");
             }
 
@@ -139,10 +146,13 @@ public class CheckInActivity extends AppCompatActivity implements ProgressReques
             }
         });
 
-        SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", 0); // 0 - for private mode
-        SharedPreferences.Editor editor = pref.edit();
+
         editor.putString("CURRENT_LOC", company).apply();
         editor.commit();
+
+        Intent intent = new Intent(this, MainActivity.class);
+        startActivity(intent);
+
 //        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 //        fusedLocationClient.getLastLocation()
 //                .addOnSuccessListener(this, new OnSuccessListener<Location>() {

@@ -4,12 +4,25 @@ import java.io.Serializable;
 
 public class UserPOJO implements Serializable {
     String name;
+    String uid;
+    String companyCode;
+    String userCode;
+    String passCode;
 
-    public UserPOJO(String name, String companyCode, String userCode, String passCode) {
+    public UserPOJO(String name, String uid, String companyCode, String userCode, String passCode) {
         this.name = name;
+        this.uid = uid;
         this.companyCode = companyCode;
         this.userCode = userCode;
         this.passCode = passCode;
+    }
+
+    public String getUid() {
+        return uid;
+    }
+
+    public void setUid(String uid) {
+        this.uid = uid;
     }
 
     public String getName() {
@@ -19,11 +32,6 @@ public class UserPOJO implements Serializable {
     public void setName(String name) {
         this.name = name;
     }
-
-    String companyCode;
-    String userCode;
-    String passCode;
-
 
     public String getCompanyCode() {
         return companyCode;

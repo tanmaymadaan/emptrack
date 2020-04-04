@@ -1,7 +1,9 @@
 package com.tanmaymadaan.emptrack.activities;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -18,6 +20,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
@@ -34,6 +37,8 @@ import android.widget.Toast;
 import com.ebanx.swipebtn.OnStateChangeListener;
 import com.ebanx.swipebtn.SwipeButton;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.karumi.dexter.BuildConfig;
@@ -54,13 +59,13 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity  {
 
     //TODO: Add History button
     //TODO: Add login info to SharedPref when users login (in onCreate (if not already logged in))
     //TODO: Add swipeStatus to SharePref
     //TODO: Fetch checkInStatus from SharedPref and display checkInBtn or checkOutBtn accordingly
-
+    //TODO: If Swiped in then only enable the option to checkIn
 
     //Button start, stop, checkin;
     TextView textView, textView2;
@@ -72,6 +77,8 @@ public class MainActivity extends AppCompatActivity {
     public LocationServiceGps locService;
     public boolean mTracking = false;
     private FusedLocationProviderClient fusedLocationClient;
+    private int locationRequestCode = 1000;
+    private double wayLatitude = 0.0, wayLongitude = 0.0;
 
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -87,6 +94,24 @@ public class MainActivity extends AppCompatActivity {
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction("com.tanmaymadaan.emptrack");
         registerReceiver(broadcastReceiver, intentFilter);
+        SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", 0); // 0 - for private mode
+        SharedPreferences.Editor editor = pref.edit();
+
+        String checkInStatus = pref.getString("CHECKIN_STATUS", null);
+        if(checkInStatus == null){
+            checkInStatus = "Inactive";
+        }
+        if(!(checkInStatus.equals("Active"))){
+            imageView.setImageResource(R.drawable.ic_add_location_black_24dp);
+        } else {
+            imageView.setImageResource(R.drawable.ic_beenhere_black_24dp);
+        }
+
+        String checkInCompany = pref.getString("CHECKIN_COMPANY", null);
+        if(checkInCompany == null){
+            checkInCompany = "";
+        }
+        textView2.setText(checkInCompany);
     }
 
     @Override
@@ -100,14 +125,26 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        textView = findViewById(R.id.textView2);
+        textView2 = findViewById(R.id.textView4);
+        imageView = findViewById(R.id.imageView);
 
+
+
+        //Getting user details from loginActivity
         Intent intent22 = getIntent();
         UserPOJO userPOJO = (UserPOJO) intent22.getSerializableExtra("user");
-        textView2 = findViewById(R.id.textView4);
-        textView2.setText(userPOJO.getName());
+        SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", 0); // 0 - for private mode
+        SharedPreferences.Editor editor = pref.edit();
+         editor.putString("USER_NAME", userPOJO.getName()).apply();
+        editor.putString("USER_UID", userPOJO.getUid()).apply();
+        editor.commit();
+
         date = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
 
-        checkInStatus = false;
+
+
+
         SwipeButton swipeButton = findViewById(R.id.swipeButton);
         swipeButton.setOnStateChangeListener(active -> {
             if(active) {
@@ -121,16 +158,16 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(getApplicationContext(), "Active: " + active, Toast.LENGTH_LONG).show();
         });
 
-        imageView = findViewById(R.id.imageView);
+
         imageView.setOnClickListener(v -> {
-            Intent intent = new Intent(this, ImageUpload.class);
+            Intent intent = new Intent(this, CheckInActivity.class);
             startActivity(intent);
         });
 
 
 //        start = findViewById(R.id.startTracking);
 //        stop = findViewById(R.id.stopTracking);
-        textView = findViewById(R.id.textView2);
+
 //        checkInLocEt = findViewById(R.id.checkInLoc);
 //        checkin = findViewById(R.id.checkInButton);
 
@@ -204,9 +241,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void startService() {
 
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(MainActivity.this);
         fusedLocationClient.getLastLocation()
-                .addOnSuccessListener(location -> {
+                .addOnSuccessListener(this, location -> {
                     SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", 0); // 0 - for private mode
                     SharedPreferences.Editor editor = pref.edit();
                     editor.putString("LAT_OLD_" + date, String.valueOf(location.getLatitude())).apply();
@@ -223,6 +260,7 @@ public class MainActivity extends AppCompatActivity {
                                 @Override
                                 public void onPermissionGranted(PermissionGrantedResponse response) {
                                     locService.startTracking();
+                                    Toast.makeText(getApplicationContext(), "Tracking started", Toast.LENGTH_LONG).show();
                                     mTracking = true;
                                     toggleButtons();
                                 }
