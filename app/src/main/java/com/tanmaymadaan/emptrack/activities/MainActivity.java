@@ -30,6 +30,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -68,11 +69,13 @@ public class MainActivity extends AppCompatActivity  {
     //TODO: If Swiped in then only enable the option to checkIn
 
     //Button start, stop, checkin;
+    ImageButton imageButton;
     TextView textView, textView2;
     EditText checkInLocEt;
     String date;
     ImageView imageView;
     Boolean checkInStatus;
+    SwipeButton swipeButton;
 
     public LocationServiceGps locService;
     public boolean mTracking = false;
@@ -95,7 +98,6 @@ public class MainActivity extends AppCompatActivity  {
         intentFilter.addAction("com.tanmaymadaan.emptrack");
         registerReceiver(broadcastReceiver, intentFilter);
         SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", 0); // 0 - for private mode
-        SharedPreferences.Editor editor = pref.edit();
 
         String checkInStatus = pref.getString("CHECKIN_STATUS", null);
         if(checkInStatus == null){
@@ -103,6 +105,7 @@ public class MainActivity extends AppCompatActivity  {
         }
         if(!(checkInStatus.equals("Active"))){
             imageView.setImageResource(R.drawable.ic_add_location_black_24dp);
+
         } else {
             imageView.setImageResource(R.drawable.ic_beenhere_black_24dp);
         }
@@ -112,6 +115,12 @@ public class MainActivity extends AppCompatActivity  {
             checkInCompany = "";
         }
         textView2.setText(checkInCompany);
+
+        String swipeStatus = pref.getString("SWIPE_STATUS", "Inactive");
+        if(!swipeStatus.equals("inactive")){
+            swipeButton.setVisibility(View.GONE);
+            imageButton.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override
@@ -125,43 +134,68 @@ public class MainActivity extends AppCompatActivity  {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", 0); // 0 - for private mode
+        SharedPreferences.Editor editor = pref.edit();
+        String loginStatus = pref.getString("LOGIN_STATUS", "false");
+        if(loginStatus.equals("false")){
+            Intent intent = new Intent(this, LoginActivity.class);
+            startActivity(intent);
+        }
+
+        imageButton = findViewById(R.id.button);
         textView = findViewById(R.id.textView2);
         textView2 = findViewById(R.id.textView4);
         imageView = findViewById(R.id.imageView);
 
-
-
+        //imageButton.setVisibility(View.GONE);
         //Getting user details from loginActivity
-        Intent intent22 = getIntent();
-        UserPOJO userPOJO = (UserPOJO) intent22.getSerializableExtra("user");
-        SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", 0); // 0 - for private mode
-        SharedPreferences.Editor editor = pref.edit();
-         editor.putString("USER_NAME", userPOJO.getName()).apply();
-        editor.putString("USER_UID", userPOJO.getUid()).apply();
-        editor.commit();
+//        Intent intent22 = getIntent();
+//        UserPOJO userPOJO = (UserPOJO) intent22.getSerializableExtra("user");
+//
+//        editor.putString("USER_NAME", userPOJO.getName()).apply();
+//        editor.putString("USER_UID", userPOJO.getUid()).apply();
+//        editor.commit();
 
         date = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
 
-
-
-
-        SwipeButton swipeButton = findViewById(R.id.swipeButton);
+        imageButton.setOnClickListener(v -> {
+            mTracking = false;
+            locService.stopTracking();
+            imageButton.setVisibility(View.GONE);
+            swipeButton.setVisibility(View.VISIBLE);
+            editor.putString("SWIPE_STATUS", "inactive").apply();
+            editor.commit();
+        });
+        swipeButton = findViewById(R.id.swipeButton);
         swipeButton.setOnStateChangeListener(active -> {
             if(active) {
                 startService();
-            }
-            else {
-                mTracking = false;
-                locService.stopTracking();
-                toggleButtons();
+                imageButton.setVisibility(View.VISIBLE);
+                swipeButton.setVisibility(View.GONE);
+                editor.putString("SWIPE_STATUS", "active").apply();
+                editor.commit();
+                swipeButton.toggleState();
             }
             Toast.makeText(getApplicationContext(), "Active: " + active, Toast.LENGTH_LONG).show();
         });
 
 
         imageView.setOnClickListener(v -> {
-            Intent intent = new Intent(this, CheckInActivity.class);
-            startActivity(intent);
+            String checkInStatus = pref.getString("CHECKIN_STATUS", null);
+            if(checkInStatus == null){
+                checkInStatus = "Inactive";
+            }
+            if(!(checkInStatus.equals("Active"))){
+                Intent intent = new Intent(this, CheckInActivity.class);
+                startActivity(intent);
+            } else {
+                editor.putString("CHECKIN_STATUS", "Inactive");
+                editor.commit();
+                Intent intent = new Intent(this, CheckOutActivity.class);
+                startActivity(intent);
+            }
+
         });
 
 

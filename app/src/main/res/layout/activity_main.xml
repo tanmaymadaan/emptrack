@@ -38,7 +38,7 @@
 
     <com.ebanx.swipebtn.SwipeButton
         android:id="@+id/swipeButton"
-        android:layout_width="359dp"
+        android:layout_width="360dp"
         android:layout_height="100dp"
         android:layout_marginBottom="120dp"
         app:button_background="@drawable/shape_button"
@@ -57,6 +57,19 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
+
+    <ImageButton
+        android:id="@+id/button"
+        android:visibility="gone"
+        android:layout_width="360dp"
+        android:layout_height="60dp"
+        android:background="@drawable/shape_button"
+        android:src="@drawable/ic_power_settings_new_black_24dp"
+        android:layout_marginBottom="140dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"/>
 
     <TextView
         android:id="@+id/textView"

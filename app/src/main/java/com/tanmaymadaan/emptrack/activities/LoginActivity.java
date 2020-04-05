@@ -9,6 +9,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
@@ -60,9 +61,14 @@ public class LoginActivity extends AppCompatActivity {
                     Toast.makeText(getApplicationContext(), response.body().toString(), Toast.LENGTH_LONG).show();
                     //Log.i("Success", userPOJO.getCompanyCode() + "\\\\\\" + userPOJO.getUserCode() + "\\\\\\" + userPOJO.getPassCode() + "\\\\" + userPOJO.getName());
                 }
+                SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", 0); // 0 - for private mode
+                SharedPreferences.Editor editor = pref.edit();
+                editor.putString("LOGIN_STATUS", "true").apply();
                 UserPOJO userPOJO = response.body();
+                editor.putString("USER_UID", userPOJO.getUid()).apply();
+                editor.putString("USER_NAME", userPOJO.getName()).apply();
+                editor.commit();
                 Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                intent.putExtra("user", userPOJO);
                 startActivity(intent);
                 //Log.i("Success", "Login Successfully");
             }

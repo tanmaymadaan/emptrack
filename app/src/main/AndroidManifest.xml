@@ -14,23 +14,22 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
-        <activity android:name=".activities.CheckInActivity">
-
-        </activity>
-        <activity android:name=".activities.LoginActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+        <activity android:name=".activities.CheckOutActivity"></activity>
+        <activity android:name=".activities.CheckInActivity"></activity>
+        <activity android:name=".activities.LoginActivity"></activity>
 
         <service
             android:name=".services.LocationServiceGps"
             android:enabled="true"
             android:exported="true" />
 
-        <activity android:name=".activities.MainActivity" />
+        <activity android:name=".activities.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>
