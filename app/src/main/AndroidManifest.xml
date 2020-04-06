@@ -14,9 +14,9 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
-        <activity android:name=".activities.CheckOutActivity"></activity>
-        <activity android:name=".activities.CheckInActivity"></activity>
-        <activity android:name=".activities.LoginActivity"></activity>
+        <activity android:name=".activities.CheckOutActivity" />
+        <activity android:name=".activities.CheckInActivity" />
+        <activity android:name=".activities.LoginActivity" />
 
         <service
             android:name=".services.LocationServiceGps"

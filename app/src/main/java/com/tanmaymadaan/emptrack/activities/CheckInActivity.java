@@ -292,7 +292,7 @@ public class CheckInActivity extends AppCompatActivity implements ProgressReques
 
         //change the ip to yours.
 //        jsonHolderApi = new Retrofit.Builder().baseUrl(getString(R.string.server_url)).client(client).build().create(JsonHolderApi.class);
-        jsonHolderApi = new Retrofit.Builder().baseUrl("http://192.168.1.6:3000").client(client).build().create(JsonHolderApi.class);
+        jsonHolderApi = new Retrofit.Builder().baseUrl(getString(R.string.server_url)).client(client).build().create(JsonHolderApi.class);
     }
 
     private void showMessageOKCancel(String message, DialogInterface.OnClickListener okListener) {

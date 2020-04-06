@@ -8,23 +8,25 @@
 
     <Button
         android:id="@+id/clickPicBtn"
-        android:layout_width="wrap_content"
+        android:layout_width="120dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="124dp"
         android:layout_marginTop="36dp"
         android:text="Click Picture"
+        android:background="@drawable/button_style"
+        android:textColor="@android:color/white"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/purposeCheckIn" />
 
     <ImageView
         android:id="@+id/imageCheckIn"
-        android:layout_width="250dp"
-        android:layout_height="250dp"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
         android:layout_centerInParent="true"
+        android:layout_marginTop="44dp"
         android:adjustViewBounds="true"
         android:scaleType="centerCrop"
-        android:layout_marginStart="84dp"
-        android:layout_marginTop="44dp"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/clickPicBtn" />
 
@@ -32,33 +34,36 @@
         android:id="@+id/checkInBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="148dp"
-        android:layout_marginTop="60dp"
+        android:layout_marginTop="56dp"
         android:text="Check In"
+        android:background="@drawable/button_style"
+        android:textColor="@android:color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/imageCheckIn" />
 
     <EditText
         android:id="@+id/companyCheckIn"
-        android:layout_width="wrap_content"
+        android:layout_width="270dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="84dp"
-        android:layout_marginTop="76dp"
+        android:layout_marginTop="80dp"
         android:ems="10"
         android:hint="Company"
         android:inputType="textPersonName"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <EditText
         android:id="@+id/purposeCheckIn"
-        android:layout_width="wrap_content"
+        android:layout_width="270dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="84dp"
         android:layout_marginTop="24dp"
         android:ems="10"
         android:hint="Purpose"
         android:inputType="textPersonName"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/companyCheckIn" />
 </androidx.constraintlayout.widget.ConstraintLayout>

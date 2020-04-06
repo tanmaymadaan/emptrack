@@ -1,9 +1,6 @@
 package com.tanmaymadaan.emptrack.activities;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -20,28 +17,21 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.ebanx.swipebtn.OnStateChangeListener;
 import com.ebanx.swipebtn.SwipeButton;
 import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.karumi.dexter.BuildConfig;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.PermissionToken;
@@ -50,10 +40,8 @@ import com.karumi.dexter.listener.PermissionGrantedResponse;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.single.PermissionListener;
 import com.tanmaymadaan.emptrack.R;
-import com.tanmaymadaan.emptrack.classes.ProgressRequestBody;
 import com.tanmaymadaan.emptrack.interfaces.JsonHolderApi;
 import com.tanmaymadaan.emptrack.models.CheckInPOJO;
-import com.tanmaymadaan.emptrack.models.UserPOJO;
 import com.tanmaymadaan.emptrack.services.LocationServiceGps;
 
 import java.text.SimpleDateFormat;
@@ -66,11 +54,11 @@ public class MainActivity extends AppCompatActivity  {
     //TODO: Add login info to SharedPref when users login (in onCreate (if not already logged in))
     //TODO: Add swipeStatus to SharePref
     //TODO: Fetch checkInStatus from SharedPref and display checkInBtn or checkOutBtn accordingly
-    //TODO: If Swiped in then only enable the option to checkIn
+    //TODO: If Swiped in then only enable the option to ic_check_in
 
     //Button start, stop, checkin;
     ImageButton imageButton;
-    TextView textView, textView2;
+    TextView distTv, currPosTv, checkInTv;
     EditText checkInLocEt;
     String date;
     ImageView imageView;
@@ -87,16 +75,13 @@ public class MainActivity extends AppCompatActivity  {
         @Override
         public void onReceive(Context context, Intent intent) {
             String kms = intent.getStringExtra("KMS");
-            textView.setText(kms + " kms");
+            distTv.setText("Distance Travelled: "+ kms + " kms");
         }
     };
 
     @Override
-    protected void onStart() {
-        super.onStart();
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction("com.tanmaymadaan.emptrack");
-        registerReceiver(broadcastReceiver, intentFilter);
+    protected void onRestart() {
+        super.onRestart();
         SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", 0); // 0 - for private mode
 
         String checkInStatus = pref.getString("CHECKIN_STATUS", null);
@@ -104,17 +89,50 @@ public class MainActivity extends AppCompatActivity  {
             checkInStatus = "Inactive";
         }
         if(!(checkInStatus.equals("Active"))){
-            imageView.setImageResource(R.drawable.ic_add_location_black_24dp);
-
+            imageView.setImageResource(R.drawable.ic_check_in);
+            checkInTv.setText("Check In");
         } else {
-            imageView.setImageResource(R.drawable.ic_beenhere_black_24dp);
+            imageView.setImageResource(R.drawable.ic_check_out);
+            checkInTv.setText("Check Out");
         }
 
         String checkInCompany = pref.getString("CHECKIN_COMPANY", null);
         if(checkInCompany == null){
-            checkInCompany = "";
+            checkInCompany = " ";
         }
-        textView2.setText(checkInCompany);
+        currPosTv.setText("Currently at: " + checkInCompany);
+
+        String swipeStatus = pref.getString("SWIPE_STATUS", "Inactive");
+        if(!swipeStatus.equals("inactive")){
+            swipeButton.setVisibility(View.GONE);
+            imageButton.setVisibility(View.VISIBLE);
+        }
+    }
+    @Override
+    protected void onStart() {
+        super.onStart();
+//        IntentFilter intentFilter = new IntentFilter();
+//        intentFilter.addAction("com.tanmaymadaan.emptrack");
+//        registerReceiver(broadcastReceiver, intentFilter);
+        SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", 0); // 0 - for private mode
+
+        String checkInStatus = pref.getString("CHECKIN_STATUS", null);
+        if(checkInStatus == null){
+            checkInStatus = "Inactive";
+        }
+        if(!(checkInStatus.equals("Active"))){
+            imageView.setImageResource(R.drawable.ic_check_in);
+            checkInTv.setText("Check In");
+        } else {
+            imageView.setImageResource(R.drawable.ic_check_out);
+            checkInTv.setText("Check Out");
+        }
+
+        String checkInCompany = pref.getString("CHECKIN_COMPANY", null);
+        if(checkInCompany == null){
+            checkInCompany = " ";
+        }
+        currPosTv.setText("Currently at: " + checkInCompany);
 
         String swipeStatus = pref.getString("SWIPE_STATUS", "Inactive");
         if(!swipeStatus.equals("inactive")){
@@ -123,11 +141,11 @@ public class MainActivity extends AppCompatActivity  {
         }
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-        unregisterReceiver(broadcastReceiver);
-    }
+//    @Override
+//    protected void onStop() {
+//        super.onStop();
+//        unregisterReceiver(broadcastReceiver);
+//    }
 
 
     @Override
@@ -144,9 +162,10 @@ public class MainActivity extends AppCompatActivity  {
         }
 
         imageButton = findViewById(R.id.button);
-        textView = findViewById(R.id.textView2);
-        textView2 = findViewById(R.id.textView4);
-        imageView = findViewById(R.id.imageView);
+        distTv = findViewById(R.id.distTv);
+        currPosTv = findViewById(R.id.currPosTv);
+        imageView = findViewById(R.id.checkInIv);
+        checkInTv = findViewById(R.id.checkInTv);
 
         //imageButton.setVisibility(View.GONE);
         //Getting user details from loginActivity
@@ -191,6 +210,7 @@ public class MainActivity extends AppCompatActivity  {
                 startActivity(intent);
             } else {
                 editor.putString("CHECKIN_STATUS", "Inactive");
+                editor.putString("CHECKIN_COMPANY", "Not Checked In");
                 editor.commit();
                 Intent intent = new Intent(this, CheckOutActivity.class);
                 startActivity(intent);
@@ -219,7 +239,7 @@ public class MainActivity extends AppCompatActivity  {
 //
 //        checkin.setOnClickListener(v -> {
 //            String loc = checkInLocEt.getText().toString().trim();
-//            checkIn(loc);
+//            ic_check_in(loc);
 //        });
 
     }
@@ -235,7 +255,7 @@ public class MainActivity extends AppCompatActivity  {
 //            final AlertDialog alert = builder.create();
 //            submit.setOnClickListener(v -> {
 //                alert.dismiss();
-//                checkIn(companyEt.getText().toString().trim());
+//                ic_check_in(companyEt.getText().toString().trim());
 //                imageView.setImageResource(R.drawable.ic_beenhere_black_24dp);
 //            });
 //            alert.show();
