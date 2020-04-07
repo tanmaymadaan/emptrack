@@ -31,7 +31,7 @@ public interface JsonHolderApi {
                                     @Field("timestamp") Integer timestamp);
 
     @FormUrlEncoded
-    @POST("ic_check_in")
+    @POST("checkIn")
     Call<CheckInPOJO> postCheckIn(@Field("userId") String userId,
                                   @Field("date") String date,
                                   @Field("lat") Double lat,
@@ -41,8 +41,10 @@ public interface JsonHolderApi {
                                   @Field("purpose") String purpose,
                                   @Field("image") String path);
 
-    @GET("ic_check_out/{id}")
-    Call<CheckInPOJO> checkOut(@Path("id") String id);
+    @FormUrlEncoded
+    @POST("checkOut")
+    Call<CheckInPOJO> checkOut(@Field("id") String id,
+                               @Field("remarks") String remarks);
 
     @Multipart
     @POST("/upload")

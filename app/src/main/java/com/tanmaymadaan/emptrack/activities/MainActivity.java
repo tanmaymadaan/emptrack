@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity  {
     //TODO: Add login info to SharedPref when users login (in onCreate (if not already logged in))
     //TODO: Add swipeStatus to SharePref
     //TODO: Fetch checkInStatus from SharedPref and display checkInBtn or checkOutBtn accordingly
-    //TODO: If Swiped in then only enable the option to ic_check_in
+    //TODO: If Swiped in then only enable the option to check_in
 
     //Button start, stop, checkin;
     ImageButton imageButton;
@@ -84,10 +84,7 @@ public class MainActivity extends AppCompatActivity  {
         super.onRestart();
         SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", 0); // 0 - for private mode
 
-        String checkInStatus = pref.getString("CHECKIN_STATUS", null);
-        if(checkInStatus == null){
-            checkInStatus = "Inactive";
-        }
+        String checkInStatus = pref.getString("CHECKIN_STATUS", " ");
         if(!(checkInStatus.equals("Active"))){
             imageView.setImageResource(R.drawable.ic_check_in);
             checkInTv.setText("Check In");
@@ -96,10 +93,7 @@ public class MainActivity extends AppCompatActivity  {
             checkInTv.setText("Check Out");
         }
 
-        String checkInCompany = pref.getString("CHECKIN_COMPANY", null);
-        if(checkInCompany == null){
-            checkInCompany = " ";
-        }
+        String checkInCompany = pref.getString("CHECKIN_COMPANY", " ");
         currPosTv.setText("Currently at: " + checkInCompany);
 
         String swipeStatus = pref.getString("SWIPE_STATUS", "Inactive");
@@ -111,15 +105,12 @@ public class MainActivity extends AppCompatActivity  {
     @Override
     protected void onStart() {
         super.onStart();
-//        IntentFilter intentFilter = new IntentFilter();
-//        intentFilter.addAction("com.tanmaymadaan.emptrack");
-//        registerReceiver(broadcastReceiver, intentFilter);
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction("com.tanmaymadaan.emptrack");
+        registerReceiver(broadcastReceiver, intentFilter);
         SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", 0); // 0 - for private mode
 
-        String checkInStatus = pref.getString("CHECKIN_STATUS", null);
-        if(checkInStatus == null){
-            checkInStatus = "Inactive";
-        }
+        String checkInStatus = pref.getString("CHECKIN_STATUS", " ");
         if(!(checkInStatus.equals("Active"))){
             imageView.setImageResource(R.drawable.ic_check_in);
             checkInTv.setText("Check In");
@@ -128,24 +119,21 @@ public class MainActivity extends AppCompatActivity  {
             checkInTv.setText("Check Out");
         }
 
-        String checkInCompany = pref.getString("CHECKIN_COMPANY", null);
-        if(checkInCompany == null){
-            checkInCompany = " ";
-        }
+        String checkInCompany = pref.getString("CHECKIN_COMPANY", " ");
         currPosTv.setText("Currently at: " + checkInCompany);
 
-        String swipeStatus = pref.getString("SWIPE_STATUS", "Inactive");
+        String swipeStatus = pref.getString("SWIPE_STATUS", "active");
         if(!swipeStatus.equals("inactive")){
             swipeButton.setVisibility(View.GONE);
             imageButton.setVisibility(View.VISIBLE);
         }
     }
 
-//    @Override
-//    protected void onStop() {
-//        super.onStop();
-//        unregisterReceiver(broadcastReceiver);
-//    }
+    @Override
+    protected void onStop() {
+        super.onStop();
+        unregisterReceiver(broadcastReceiver);
+    }
 
 
     @Override
@@ -167,14 +155,6 @@ public class MainActivity extends AppCompatActivity  {
         imageView = findViewById(R.id.checkInIv);
         checkInTv = findViewById(R.id.checkInTv);
 
-        //imageButton.setVisibility(View.GONE);
-        //Getting user details from loginActivity
-//        Intent intent22 = getIntent();
-//        UserPOJO userPOJO = (UserPOJO) intent22.getSerializableExtra("user");
-//
-//        editor.putString("USER_NAME", userPOJO.getName()).apply();
-//        editor.putString("USER_UID", userPOJO.getUid()).apply();
-//        editor.commit();
 
         date = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
 
@@ -209,9 +189,7 @@ public class MainActivity extends AppCompatActivity  {
                 Intent intent = new Intent(this, CheckInActivity.class);
                 startActivity(intent);
             } else {
-                editor.putString("CHECKIN_STATUS", "Inactive");
-                editor.putString("CHECKIN_COMPANY", "Not Checked In");
-                editor.commit();
+
                 Intent intent = new Intent(this, CheckOutActivity.class);
                 startActivity(intent);
             }
@@ -219,79 +197,12 @@ public class MainActivity extends AppCompatActivity  {
         });
 
 
-//        start = findViewById(R.id.startTracking);
-//        stop = findViewById(R.id.stopTracking);
-
-//        checkInLocEt = findViewById(R.id.checkInLoc);
-//        checkin = findViewById(R.id.checkInButton);
-
         final Intent intent = new Intent(this.getApplication(), LocationServiceGps.class);
         this.getApplication().startService(intent);
         this.getApplication().bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
 
-//        start.setOnClickListener(v -> startService());
-//
-//        stop.setOnClickListener(v -> {
-//            mTracking = false;
-//            locService.stopTracking();
-//            toggleButtons();
-//        });
-//
-//        checkin.setOnClickListener(v -> {
-//            String loc = checkInLocEt.getText().toString().trim();
-//            ic_check_in(loc);
-//        });
-
     }
 
-//    private void imageClicked(){
-//        if(!checkInStatus){
-//            checkInStatus = true;
-//            final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-//            final View view = getLayoutInflater().inflate(R.layout.layout_checkin, null);
-//            final EditText companyEt = view.findViewById(R.id.companyEt);
-//            Button submit = view.findViewById(R.id.submitBtn);
-//            builder.setView(view);
-//            final AlertDialog alert = builder.create();
-//            submit.setOnClickListener(v -> {
-//                alert.dismiss();
-//                ic_check_in(companyEt.getText().toString().trim());
-//                imageView.setImageResource(R.drawable.ic_beenhere_black_24dp);
-//            });
-//            alert.show();
-//        } else {
-//            checkInStatus = false;
-//            imageView.setImageResource(R.drawable.ic_add_location_black_24dp);
-//            checkout();
-//        }
-//    }
-
-    private void checkout(){
-        String myUrl = getString(R.string.server_url);
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(myUrl)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
-        JsonHolderApi jsonPlaceHolderApi = retrofit.create(JsonHolderApi.class);
-        Call<CheckInPOJO> call = jsonPlaceHolderApi.checkOut("Tanmay");
-        call.enqueue(new Callback<CheckInPOJO>() {
-            @Override
-            public void onResponse(Call<CheckInPOJO> call, Response<CheckInPOJO> response) {
-                if(!response.isSuccessful()){
-                    Toast.makeText(getApplicationContext(), response.message(), Toast.LENGTH_LONG).show();
-                }
-                Log.i("Success", "Saved Successfully");
-            }
-
-            @Override
-            public void onFailure(Call<CheckInPOJO> call, Throwable t) {
-                Log.e("Error Location", t.getMessage());
-                Toast.makeText(getApplicationContext(), t.getMessage(), Toast.LENGTH_LONG).show();
-            }
-        });
-
-    }
 
     private void startService() {
 
