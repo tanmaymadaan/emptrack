@@ -2,6 +2,7 @@ package com.tanmaymadaan.emptrack.interfaces;
 
 import com.tanmaymadaan.emptrack.models.CheckInPOJO;
 import com.tanmaymadaan.emptrack.models.LocationPOJO;
+import com.tanmaymadaan.emptrack.models.UserPOJO;
 
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -16,15 +17,23 @@ import retrofit2.http.POST;
 import retrofit2.http.Part;
 import retrofit2.http.Path;
 
-public interface JsonHolderApi {
+public interface UserApi {
 
+
+    @FormUrlEncoded
+    @POST("swipe-in")
+    Call<UserPOJO> swipeIn(@Field("uid") String uid);
+
+    @FormUrlEncoded
+    @POST("swipe-out")
+    Call<UserPOJO> swipeOut(@Field("uid") String uid);
 
     @POST("add-position")
     Call<LocationPOJO> postLocationss(@Body LocationPOJO location);
 
     @FormUrlEncoded
     @POST("add-position")
-    Call<LocationPOJO> postLocation(@Field("userId") String userId,
+    Call<LocationPOJO> postLocation(@Field("uid") String uid,
                                     @Field("date") String date,
                                     @Field("lat") Double lat,
                                     @Field("lng") Double lng,
@@ -32,7 +41,7 @@ public interface JsonHolderApi {
 
     @FormUrlEncoded
     @POST("checkIn")
-    Call<CheckInPOJO> postCheckIn(@Field("userId") String userId,
+    Call<CheckInPOJO> postCheckIn(@Field("uid") String uid,
                                   @Field("date") String date,
                                   @Field("lat") Double lat,
                                   @Field("lng") Double lng,
@@ -43,7 +52,7 @@ public interface JsonHolderApi {
 
     @FormUrlEncoded
     @POST("checkOut")
-    Call<CheckInPOJO> checkOut(@Field("id") String id,
+    Call<CheckInPOJO> checkOut(@Field("uid") String uid,
                                @Field("remarks") String remarks);
 
     @Multipart

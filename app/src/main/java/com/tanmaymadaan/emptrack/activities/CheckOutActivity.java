@@ -17,7 +17,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.tanmaymadaan.emptrack.R;
-import com.tanmaymadaan.emptrack.interfaces.JsonHolderApi;
+import com.tanmaymadaan.emptrack.interfaces.UserApi;
 import com.tanmaymadaan.emptrack.models.CheckInPOJO;
 
 public class CheckOutActivity extends AppCompatActivity {
@@ -57,7 +57,7 @@ public class CheckOutActivity extends AppCompatActivity {
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
-        JsonHolderApi jsonPlaceHolderApi = retrofit.create(JsonHolderApi.class);
+        UserApi jsonPlaceHolderApi = retrofit.create(UserApi.class);
         SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", 0);
         Call<CheckInPOJO> call = jsonPlaceHolderApi.checkOut(pref.getString("USER_UID", null), remarks);
         call.enqueue(new Callback<CheckInPOJO>() {

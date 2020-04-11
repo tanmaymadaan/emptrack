@@ -23,6 +23,7 @@ import android.os.IBinder;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -40,8 +41,9 @@ import com.karumi.dexter.listener.PermissionGrantedResponse;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.single.PermissionListener;
 import com.tanmaymadaan.emptrack.R;
-import com.tanmaymadaan.emptrack.interfaces.JsonHolderApi;
-import com.tanmaymadaan.emptrack.models.CheckInPOJO;
+import com.tanmaymadaan.emptrack.interfaces.LoginAPIInterface;
+import com.tanmaymadaan.emptrack.interfaces.UserApi;
+import com.tanmaymadaan.emptrack.models.UserPOJO;
 import com.tanmaymadaan.emptrack.services.LocationServiceGps;
 
 import java.text.SimpleDateFormat;
@@ -50,19 +52,13 @@ import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity  {
 
-    //TODO: Add History button
-    //TODO: Add login info to SharedPref when users login (in onCreate (if not already logged in))
-    //TODO: Add swipeStatus to SharePref
-    //TODO: Fetch checkInStatus from SharedPref and display checkInBtn or checkOutBtn accordingly
     //TODO: If Swiped in then only enable the option to check_in
 
-    //Button start, stop, checkin;
+    Button logoutBtn;
     ImageButton imageButton;
     TextView distTv, currPosTv, checkInTv;
-    EditText checkInLocEt;
     String date;
     ImageView imageView;
-    Boolean checkInStatus;
     SwipeButton swipeButton;
 
     public LocationServiceGps locService;
@@ -97,7 +93,7 @@ public class MainActivity extends AppCompatActivity  {
         currPosTv.setText("Currently at: " + checkInCompany);
 
         String swipeStatus = pref.getString("SWIPE_STATUS", "Inactive");
-        if(!swipeStatus.equals("inactive")){
+        if(!(swipeStatus.equals("Inactive"))){
             swipeButton.setVisibility(View.GONE);
             imageButton.setVisibility(View.VISIBLE);
         }
@@ -122,8 +118,8 @@ public class MainActivity extends AppCompatActivity  {
         String checkInCompany = pref.getString("CHECKIN_COMPANY", " ");
         currPosTv.setText("Currently at: " + checkInCompany);
 
-        String swipeStatus = pref.getString("SWIPE_STATUS", "active");
-        if(!swipeStatus.equals("inactive")){
+        String swipeStatus = pref.getString("SWIPE_STATUS", "Inactive");
+        if(!(swipeStatus.equals("Inactive"))){
             swipeButton.setVisibility(View.GONE);
             imageButton.setVisibility(View.VISIBLE);
         }
@@ -143,17 +139,46 @@ public class MainActivity extends AppCompatActivity  {
 
         SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", 0); // 0 - for private mode
         SharedPreferences.Editor editor = pref.edit();
-        String loginStatus = pref.getString("LOGIN_STATUS", "false");
-        if(loginStatus.equals("false")){
-            Intent intent = new Intent(this, LoginActivity.class);
-            startActivity(intent);
-        }
+//        String loginStatus = pref.getString("LOGIN_STATUS", "false");
+//        if(loginStatus.equals("false")){
+//            Intent intent = new Intent(this, LoginActivity.class);
+//            startActivity(intent);
+//        }
 
         imageButton = findViewById(R.id.button);
         distTv = findViewById(R.id.distTv);
         currPosTv = findViewById(R.id.currPosTv);
         imageView = findViewById(R.id.checkInIv);
         checkInTv = findViewById(R.id.checkInTv);
+        logoutBtn = findViewById(R.id.logoutBtnUser);
+
+        logoutBtn.setOnClickListener(v -> {
+            String myUrl = getString(R.string.server_url);
+            Retrofit retrofit = new Retrofit.Builder()
+                    .baseUrl(myUrl)
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build();
+            LoginAPIInterface loginAPIInterface = retrofit.create(LoginAPIInterface.class);
+            String uid = pref.getString("USER_UID", null);
+            Call<UserPOJO> call = loginAPIInterface.logout(uid);
+            call.enqueue(new Callback<UserPOJO>() {
+                @Override
+                public void onResponse(Call<UserPOJO> call, Response<UserPOJO> response) {
+                    editor.putString("LOGIN_STATUS", "false").apply();
+                    editor.putString("CHECKIN_STATUS", "false").apply();
+                    editor.putString("CHECKIN_COMPANY", "NULL").apply();
+                    editor.commit();
+                    Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
+                    startActivity(intent);
+                }
+
+                @Override
+                public void onFailure(Call<UserPOJO> call, Throwable t) {
+                    Toast.makeText(getApplicationContext(), "Logout Failed", Toast.LENGTH_LONG).show();
+                }
+            });
+
+        });
 
 
         date = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
@@ -165,6 +190,27 @@ public class MainActivity extends AppCompatActivity  {
             swipeButton.setVisibility(View.VISIBLE);
             editor.putString("SWIPE_STATUS", "inactive").apply();
             editor.commit();
+            String myUrl = getString(R.string.server_url);
+            Retrofit retrofit = new Retrofit.Builder()
+                    .baseUrl(myUrl)
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build();
+            UserApi userApi = retrofit.create(UserApi.class);
+            String uid = pref.getString("USER_UID", null);
+            Call<UserPOJO> call = userApi.swipeOut(uid);
+            call.enqueue(new Callback<UserPOJO>() {
+                @Override
+                public void onResponse(Call<UserPOJO> call, Response<UserPOJO> response) {
+                    if(!(response.isSuccessful())){
+                        Log.d("MainActivity", "Response Not Successful on SwipeOut");
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<UserPOJO> call, Throwable t) {
+                    Log.d("MainActivity", "Failure on SwipeOut");
+                }
+            });
         });
         swipeButton = findViewById(R.id.swipeButton);
         swipeButton.setOnStateChangeListener(active -> {
@@ -174,6 +220,29 @@ public class MainActivity extends AppCompatActivity  {
                 swipeButton.setVisibility(View.GONE);
                 editor.putString("SWIPE_STATUS", "active").apply();
                 editor.commit();
+
+                String myUrl = getString(R.string.server_url);
+                Retrofit retrofit = new Retrofit.Builder()
+                        .baseUrl(myUrl)
+                        .addConverterFactory(GsonConverterFactory.create())
+                        .build();
+                UserApi userApi = retrofit.create(UserApi.class);
+                SharedPreferences pref2 = getApplicationContext().getSharedPreferences("MyPref", 0);// 0 - for private mode
+                String uid = pref2.getString("USER_UID", null);
+                Call<UserPOJO> call = userApi.swipeIn(uid);
+                call.enqueue(new Callback<UserPOJO>() {
+                    @Override
+                    public void onResponse(Call<UserPOJO> call, Response<UserPOJO> response) {
+                        if(!(response.isSuccessful())){
+                            Log.d("MainActivity", "Response Not Successful on SwipeIn");
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<UserPOJO> call, Throwable t) {
+                        Log.d("MainActivity", "Failure on SwipeIn");
+                    }
+                });
                 swipeButton.toggleState();
             }
             Toast.makeText(getApplicationContext(), "Active: " + active, Toast.LENGTH_LONG).show();

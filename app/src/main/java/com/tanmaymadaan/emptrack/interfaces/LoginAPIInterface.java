@@ -17,5 +17,11 @@ public interface LoginAPIInterface {
                          @Field("userCode") String userCode,
                          @Field("passCode") String passCode);
 
+    @FormUrlEncoded
+    @POST("/logout")
+    Call<UserPOJO> logout(@Field("uid") String uid);
+
+
+
 
 }

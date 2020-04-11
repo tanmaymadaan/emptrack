@@ -6,15 +6,64 @@ public class UserPOJO implements Serializable {
     String name;
     String uid;
     String companyCode;
-    String userCode;
-    String passCode;
+    String status;
+    String checkInStatus;
+    String currCheckIn;
+    String role;
 
-    public UserPOJO(String name, String uid, String companyCode, String userCode, String passCode) {
+    public UserPOJO(String name, String uid, String companyCode, String status, String checkInStatus, String currCheckIn, String role, String swipeStatus) {
         this.name = name;
         this.uid = uid;
         this.companyCode = companyCode;
-        this.userCode = userCode;
-        this.passCode = passCode;
+        this.status = status;
+        this.checkInStatus = checkInStatus;
+        this.currCheckIn = currCheckIn;
+        this.role = role;
+        this.swipeStatus = swipeStatus;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public String getSwipeStatus() {
+        return swipeStatus;
+    }
+
+    public void setSwipeStatus(String swipeStatus) {
+        this.swipeStatus = swipeStatus;
+    }
+
+    String swipeStatus;
+
+    public String getCurrCheckIn() {
+        return currCheckIn;
+    }
+
+    public void setCurrCheckIn(String currCheckIn) {
+        this.currCheckIn = currCheckIn;
+    }
+
+
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getCheckInStatus() {
+        return checkInStatus;
+    }
+
+    public void setCheckInStatus(String checkInStatus) {
+        this.checkInStatus = checkInStatus;
     }
 
     public String getUid() {
@@ -41,19 +90,4 @@ public class UserPOJO implements Serializable {
         this.companyCode = companyCode;
     }
 
-    public String getUserCode() {
-        return userCode;
-    }
-
-    public void setUserCode(String userCode) {
-        this.userCode = userCode;
-    }
-
-    public String getPassCode() {
-        return passCode;
-    }
-
-    public void setPassCode(String passCode) {
-        this.passCode = passCode;
-    }
 }

@@ -30,6 +30,17 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
+        SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", 0); // 0 - for private mode
+        String loginStatus = pref.getString("LOGIN_STATUS", "false");
+        String userRole = pref.getString("USER_ROLE", "user");
+        if(loginStatus.equals("true") && userRole.equals("user")){
+            Intent intent = new Intent(this, MainActivity.class);
+            startActivity(intent);
+        } else if (loginStatus.equals("true") && userRole.equals("admin")) {
+            Intent intent = new Intent(this, AdminMainActivity.class);
+            startActivity(intent);
+        }
+
          companyCodeEt = findViewById(R.id.companyCode);
          userCodeEt = findViewById(R.id.userCode);
          passCodeEt = findViewById(R.id.passCode);
@@ -67,9 +78,17 @@ public class LoginActivity extends AppCompatActivity {
                 UserPOJO userPOJO = response.body();
                 editor.putString("USER_UID", userPOJO.getUid()).apply();
                 editor.putString("USER_NAME", userPOJO.getName()).apply();
+                editor.putString("USER_ROLE", userPOJO.getRole()).apply();
                 editor.commit();
-                Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                startActivity(intent);
+
+                if(userPOJO.getRole().equals("admin")){
+                    Intent intent = new Intent(getApplicationContext(), AdminMainActivity.class);
+                    startActivity(intent);
+                } else {
+                    Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                    startActivity(intent);
+                }
+
                 //Log.i("Success", "Login Successfully");
             }
 

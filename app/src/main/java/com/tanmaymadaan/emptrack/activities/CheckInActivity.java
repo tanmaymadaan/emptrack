@@ -24,8 +24,6 @@ import android.content.pm.ResolveInfo;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.location.Location;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -40,11 +38,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.tanmaymadaan.emptrack.R;
 import com.tanmaymadaan.emptrack.classes.ProgressRequestBody;
-import com.tanmaymadaan.emptrack.interfaces.JsonHolderApi;
+import com.tanmaymadaan.emptrack.interfaces.UserApi;
 import com.tanmaymadaan.emptrack.models.CheckInPOJO;
 
 import java.io.ByteArrayOutputStream;
@@ -71,7 +67,7 @@ public class CheckInActivity extends AppCompatActivity implements ProgressReques
 //    ImageView image;
     Button clickPicBtn, checkInBtn;
 
-    JsonHolderApi jsonHolderApi;
+    UserApi userApi;
     Uri picUri;
     private ArrayList<String> permissionsToRequest;
     private ArrayList<String> permissionsRejected = new ArrayList<>();
@@ -119,7 +115,7 @@ public class CheckInActivity extends AppCompatActivity implements ProgressReques
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
-        JsonHolderApi jsonPlaceHolderApi = retrofit.create(JsonHolderApi.class);
+        UserApi jsonPlaceHolderApi = retrofit.create(UserApi.class);
        //TODO; location lat and lng
         //TODO: timestamp automatic
         SharedPreferences pref = getApplicationContext().getSharedPreferences("MyPref", 0);// 0 - for private mode
@@ -135,6 +131,7 @@ public class CheckInActivity extends AppCompatActivity implements ProgressReques
                 }
                 editor.putString("CHECKIN_STATUS", "Active").apply();
                 editor.putString("CHECKIN_COMPANY", company).apply();
+                editor.putString("CHECKIN_PUPROSE", purpose).apply();
 
                 Log.i("Success", "Saved Successfully");
             }
@@ -292,7 +289,7 @@ public class CheckInActivity extends AppCompatActivity implements ProgressReques
 
         //change the ip to yours.
 //        jsonHolderApi = new Retrofit.Builder().baseUrl(getString(R.string.server_url)).client(client).build().create(JsonHolderApi.class);
-        jsonHolderApi = new Retrofit.Builder().baseUrl(getString(R.string.server_url)).client(client).build().create(JsonHolderApi.class);
+        userApi = new Retrofit.Builder().baseUrl(getString(R.string.server_url)).client(client).build().create(UserApi.class);
     }
 
     private void showMessageOKCancel(String message, DialogInterface.OnClickListener okListener) {
@@ -362,7 +359,7 @@ public class CheckInActivity extends AppCompatActivity implements ProgressReques
                 MultipartBody.Part body = MultipartBody.Part.createFormData("upload", file.getName(), fileBody);
                 RequestBody name = RequestBody.create(MediaType.parse("text/plain"), "upload");
 
-                Call<ResponseBody> req = jsonHolderApi.postImage(body, name);
+                Call<ResponseBody> req = userApi.postImage(body, name);
                 req.enqueue(new Callback<ResponseBody>() {
                     @Override
                     public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
