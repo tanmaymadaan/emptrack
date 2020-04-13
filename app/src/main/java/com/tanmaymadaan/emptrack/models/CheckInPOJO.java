@@ -5,16 +5,22 @@ public class CheckInPOJO {
     private String date;
     private Double lat;
     private Double lng;
-    private Integer timestamp;
+    private String checkinTime;
+    private String checkoutTime;
     private String company;
+    private String purpose;
+    private String remarks;
 
-    public CheckInPOJO(String userId, String date, Double lat, Double lng, Integer timestamp, String company) {
+    public CheckInPOJO(String userId, String date, Double lat, Double lng, String checkInTime, String checkOutTime, String company, String purpose, String remarks) {
         this.userId = userId;
         this.date = date;
         this.lat = lat;
         this.lng = lng;
-        this.timestamp = timestamp;
+        this.checkinTime = checkInTime;
+        this.checkoutTime = checkOutTime;
         this.company = company;
+        this.purpose = purpose;
+        this.remarks = remarks;
     }
 
     public String getUserId() {
@@ -49,12 +55,20 @@ public class CheckInPOJO {
         this.lng = lng;
     }
 
-    public Integer getTimestamp() {
-        return timestamp;
+    public String getCheckInTime() {
+        return checkinTime;
     }
 
-    public void setTimestamp(Integer timestamp) {
-        this.timestamp = timestamp;
+    public void setCheckInTime(String checkInTime) {
+        this.checkinTime = checkInTime;
+    }
+
+    public String getCheckOutTime() {
+        return checkoutTime;
+    }
+
+    public void setCheckOutTime(String checkOutTime) {
+        this.checkoutTime = checkOutTime;
     }
 
     public String getCompany() {
@@ -63,5 +77,21 @@ public class CheckInPOJO {
 
     public void setCompany(String company) {
         this.company = company;
+    }
+
+    public String getPurpose() {
+        return purpose;
+    }
+
+    public void setPurpose(String purpose) {
+        this.purpose = purpose;
+    }
+
+    public String getRemarks() {
+        return remarks;
+    }
+
+    public void setRemarks(String remarks) {
+        this.remarks = remarks;
     }
 }

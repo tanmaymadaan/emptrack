@@ -2,7 +2,7 @@
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent" android:layout_height="wrap_content"
     android:padding="50dp"
-    android:id="@+id/cardParent"
+    android:id="@+id/checkinsCardParent"
     >
 
     <LinearLayout
@@ -11,27 +11,45 @@
         android:orientation="vertical"
         android:background="@drawable/shape_rounded_10dp">
         <TextView
-            android:id="@+id/row_name_tv"
+            android:id="@+id/company_name_tv_checkIns_row"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="5dp"
-            android:text="Tanmay Madaan"
+            android:text="AP Hosiery"
             android:textColor="@android:color/white"
             android:textSize="24sp"/>
         <TextView
-            android:id="@+id/row_status_tv"
+            android:id="@+id/purpose_tv_checkIns_row"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="5dp"
-            android:text="Present"
+            android:text="Purpose: Installation"
             android:textColor="@android:color/white"
             android:textSize="18sp"/>
         <TextView
-            android:id="@+id/row_check_in_tv"
+            android:id="@+id/check_in_time_tv_checkIns_row"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="5dp"
-            android:text="Checked In at Spine"
+            android:text="Check In Time: 10:39AM"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"/>
+
+        <TextView
+            android:id="@+id/check_out_time_tv_checkIns_row"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="5dp"
+            android:text="Check Out Time: 12:10PM"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"/>
+
+        <TextView
+            android:id="@+id/remarks_tv_checkIns_row"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="5dp"
+            android:text="Remarks: "
             android:textColor="@android:color/white"
             android:textSize="18sp"/>
     </LinearLayout>

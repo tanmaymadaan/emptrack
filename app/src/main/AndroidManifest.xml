@@ -14,12 +14,11 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
-        <activity android:name=".activities.AdminMainActivity">
-
-        </activity>
+        <activity android:name=".activities.AdminCheckinsActivity"></activity>
+        <activity android:name=".activities.AdminMainActivity"></activity>
         <activity android:name=".activities.CheckOutActivity" />
         <activity android:name=".activities.CheckInActivity" />
-        <activity android:name=".activities.LoginActivity" >
+        <activity android:name=".activities.LoginActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -32,9 +31,7 @@
             android:enabled="true"
             android:exported="true" />
 
-        <activity android:name=".activities.MainActivity">
-
-        </activity>
+        <activity android:name=".activities.MainActivity"></activity>
     </application>
 
 </manifest>

@@ -53,7 +53,7 @@ public class AdminMainActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<List<UserPOJO>> call, Response<List<UserPOJO>> response) {
                 List<UserPOJO> users = response.body();
-                dataAdapter = new DataAdapter(users);
+                dataAdapter = new DataAdapter(users, getApplicationContext());
                 recyclerView.setAdapter(dataAdapter);
 
                 for(int i = 0; i < users.size(); i++){
